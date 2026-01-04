@@ -121,6 +121,11 @@ src/
 - Minimal dependencies are preferred
 - Hot reload should work in Docker environment
 - All changes should be tested in Docker before committing
+- **Keep Docker container running**: Use `docker-compose up --build -d` to start in background
+- **Stop Docker container**: Use `docker-compose down` when finished
+- **Check container status**: Use `docker-compose ps` to see running containers
+- **View logs**: Use `docker-compose logs -f` to monitor application output
+- **Test in browser**: Application runs at http://localhost:5173
 
 ## AI Development Guidelines
 When making changes or adding features:

@@ -12,7 +12,12 @@
   },
   "dependencies": {
     "react": "^19.2",
-    "react-dom": "^19.2"
+    "react-dom": "^19.2",
+    "@mui/material": "^7.3.6",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.3.6",
+    "react-router-dom": "^7.11.0"
   },
   "devDependencies": {
     "vite": "^7.0.0",
