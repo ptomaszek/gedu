@@ -23,13 +23,11 @@ describe('App (Landing Page)', () => {
       
       // Check that menu items are present using link selectors
       // Note: There are now duplicate links (sidebar + landing page content)
-      const homeLinks = screen.getAllByRole('link', { name: 'Strona główna' });
       const mathLinks = screen.getAllByRole('link', { name: 'Gra matematyczna' });
-      const contactLinks = screen.getAllByRole('link', { name: 'Kontakt' });
+      const dummyLinks = screen.getAllByRole('link', { name: 'Dummy' });
       
-      expect(homeLinks).toHaveLength(2);
       expect(mathLinks).toHaveLength(2);
-      expect(contactLinks).toHaveLength(2);
+      expect(dummyLinks).toHaveLength(2);
     });
   });
 });

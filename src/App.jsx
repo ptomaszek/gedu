@@ -1,197 +1,185 @@
 import React, { useState } from 'react';
 import {
-  AppBar,
-  Box,
-  Drawer,
-  List,
-  ListItem,
-  ListItemText,
-  Toolbar,
-  Typography,
-  IconButton,
-  Container,
-  CssBaseline,
-  useTheme,
-  ListItemButton,
-  ListItemIcon
+    AppBar,
+    Box,
+    Drawer,
+    List,
+    ListItem,
+    ListItemText,
+    Toolbar,
+    Typography,
+    IconButton,
+    Container,
+    CssBaseline,
+    useTheme,
+    ListItemButton
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { BrowserRouter as Router, Routes, Route, useLocation, Link as RouterLink } from 'react-router-dom';
+import { BrowserRouter as Router, useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
 import MathGame from './MathGame';
 
-// DRY: Centralized menu items configuration
+// Centralized menu config
 const menuItems = [
-  { text: 'Strona główna', path: '/' },
-  { text: 'Gra matematyczna', path: '/games/math' },
-  { text: 'Kontakt', path: '/games/contact' }
+    { text: 'Gra matematyczna', path: '/games/math' },
+    { text: 'Dummy', path: '/games/dummy' }
 ];
 
-// Reusable MenuList component
-const MenuList = ({ onItemClick = () => {} }) => {
-  const theme = useTheme();
-  
-  return (
-    <List>
-      {menuItems.map((item, index) => (
-        <ListItem key={index} disablePadding>
-          <ListItemButton
-            component={RouterLink}
-            to={item.path}
-            onClick={onItemClick}
-            sx={{
-              borderRadius: 1,
-              '&:hover': {
-                backgroundColor: theme.palette.action.hover,
-              },
-            }}
-          >
-            <ListItemText 
-              primary={item.text} 
-            />
-          </ListItemButton>
-        </ListItem>
-      ))}
-    </List>
-  );
+// Reusable MenuList with active item highlighting
+const MenuList = ({ onItemClick = () => {}, activePath }) => {
+    const theme = useTheme();
+
+    return (
+        <List>
+            {menuItems.map((item, index) => {
+                const isActive = activePath === item.path;
+
+                return (
+                    <ListItem key={index} disablePadding>
+                        <ListItemButton
+                            component={RouterLink}
+                            to={item.path}
+                            onClick={onItemClick}
+                            sx={{
+                                borderRadius: 1,
+                                backgroundColor: isActive ? theme.palette.action.selected : 'inherit',
+                                '&:hover': {
+                                    backgroundColor: theme.palette.action.hover
+                                }
+                            }}
+                        >
+                            <ListItemText primary={item.text} />
+                        </ListItemButton>
+                    </ListItem>
+                );
+            })}
+        </List>
+    );
 };
 
 function AppContent() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const location = useLocation();
-  const theme = useTheme();
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const location = useLocation();
+    const navigate = useNavigate();
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
+    const handleDrawerToggle = () => {
+        setMobileOpen((prev) => !prev);
+    };
 
-  const drawer = (
-    <Box sx={{ width: 220 }} role="presentation" onClick={handleDrawerToggle}>
-      <MenuList />
-    </Box>
-  );
+    // Drawer with AppBar offset
+    const drawer = (
+        <Box sx={{ width: 220 }} role="presentation">
+            <Toolbar /> {/* offsets content below AppBar */}
+            <MenuList onItemClick={handleDrawerToggle} activePath={location.pathname} />
+        </Box>
+    );
 
-  const renderContent = () => {
-    switch (location.pathname) {
-      case '/games/math':
-        return <MathGame />;
-      case '/games/contact':
-        return (
-          <Container maxWidth="lg">
-            <Typography variant="h4" gutterBottom>
-              Strona kontaktowa
-            </Typography>
-            <Typography variant="body1">
-              To jest treść strony kontaktowej.
-            </Typography>
-          </Container>
-        );
-      default:
-        return (
-          <Container maxWidth="lg">
-            <Typography variant="h4" gutterBottom>
-              Witaj na stronie głównej
-            </Typography>
-            <Typography variant="body1" paragraph>
-              To jest responsywna strona główna stworzona z wykorzystaniem Material UI. Układ dostosowuje się do różnych rozmiarów ekranów:
-            </Typography>
-            <Typography variant="body1" paragraph>
-              • Na ekranach komputerowych (większych niż 1024px) menu pojawia się jako pasek boczny po lewej stronie.
-            </Typography>
-            <Typography variant="body1" paragraph>
-              • Na tabletach i ekranach mobilnych (1024px i mniejszych) menu jest ukryte i można uzyskać do niego dostęp za pomocą przycisku menu w nagłówku.
-            </Typography>
-            <Typography variant="body1" paragraph>
-              Projekt opiera się na zasadach Material Design i zapewnia czyste, nowoczesne wrażenia użytkownika.
-            </Typography>
-            
-            <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
-              Dostępne gry:
-            </Typography>
-            <MenuList />
-          </Container>
-        );
-    }
-  };
+    const renderContent = () => {
+        switch (location.pathname) {
+            case '/games/math':
+                return <MathGame />;
 
-  return (
-    <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
-      
-      {/* Header */}
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ cursor: 'pointer' }} onClick={() => window.location.href = '/'}>
-            Gry dla XY
-          </Typography>
-        </Toolbar>
-      </AppBar>
+            case '/games/dummy':
+                return (
+                    <Container maxWidth="lg">
+                        <Typography variant="h4" gutterBottom>
+                            Strona Dummy
+                        </Typography>
+                        <Typography variant="body1">To jest treść strony Dummy.</Typography>
+                    </Container>
+                );
 
-      {/* Sidebar */}
-      <Box
-        component="nav"
-        sx={{ width: { md: 220 }, flexShrink: { md: 0 } }}
-        aria-label="menu"
-      >
-        {/* Desktop Sidebar */}
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true,
-          }}
-          sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 220 },
-          }}
-        >
-          {drawer}
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', md: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 220 },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
+            default:
+                return (
+                    <Container maxWidth="lg">
+                        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+                            Dostępne gry:
+                        </Typography>
+                        <MenuList activePath={location.pathname} />
+                    </Container>
+                );
+        }
+    };
 
-      {/* Main Content */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { md: `calc(100% - 220px)` },
-          minHeight: '100vh',
-          backgroundColor: '#f8f9fa'
-        }}
-      >
-        <Toolbar />
-        {renderContent()}
-      </Box>
-    </Box>
-  );
+    return (
+        <Box sx={{ display: 'flex' }}>
+            <CssBaseline />
+
+            {/* AppBar */}
+            <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                <Toolbar>
+                    <IconButton
+                        color="inherit"
+                        edge="start"
+                        onClick={handleDrawerToggle}
+                        sx={{ mr: 2, display: { md: 'none' } }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+
+                    <Typography
+                        variant="h6"
+                        noWrap
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() => navigate('/')}
+                    >
+                        Gry dla XY
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+
+            {/* Navigation */}
+            <Box component="nav" sx={{ width: { md: 220 }, flexShrink: { md: 0 } }}>
+                {/* Mobile */}
+                <Drawer
+                    variant="temporary"
+                    open={mobileOpen}
+                    onClose={handleDrawerToggle}
+                    ModalProps={{ keepMounted: true }}
+                    sx={{
+                        display: { xs: 'block', md: 'none' },
+                        '& .MuiDrawer-paper': { width: 220 }
+                    }}
+                >
+                    {drawer}
+                </Drawer>
+
+                {/* Desktop */}
+                <Drawer
+                    variant="permanent"
+                    open
+                    sx={{
+                        display: { xs: 'none', md: 'block' },
+                        '& .MuiDrawer-paper': { width: 220 }
+                    }}
+                >
+                    {drawer}
+                </Drawer>
+            </Box>
+
+            {/* Main content */}
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    p: 3,
+                    width: { md: 'calc(100% - 220px)' },
+                    minHeight: '100vh',
+                    backgroundColor: '#f8f9fa'
+                }}
+            >
+                <Toolbar /> {/* pushes content below AppBar */}
+                {renderContent()}
+            </Box>
+        </Box>
+    );
 }
 
 function App() {
-  return (
-    <Router>
-      <AppContent />
-    </Router>
-  );
+    return (
+        <Router>
+            <AppContent />
+        </Router>
+    );
 }
 
 export default App;
