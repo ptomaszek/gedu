@@ -19,6 +19,42 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { BrowserRouter as Router, Routes, Route, useLocation, Link as RouterLink } from 'react-router-dom';
 import MathGame from './MathGame';
 
+// DRY: Centralized menu items configuration
+const menuItems = [
+  { text: 'Strona główna', path: '/' },
+  { text: 'Gra matematyczna', path: '/games/math' },
+  { text: 'Kontakt', path: '/games/contact' }
+];
+
+// Reusable MenuList component
+const MenuList = ({ onItemClick = () => {} }) => {
+  const theme = useTheme();
+  
+  return (
+    <List>
+      {menuItems.map((item, index) => (
+        <ListItem key={index} disablePadding>
+          <ListItemButton
+            component={RouterLink}
+            to={item.path}
+            onClick={onItemClick}
+            sx={{
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: theme.palette.action.hover,
+              },
+            }}
+          >
+            <ListItemText 
+              primary={item.text} 
+            />
+          </ListItemButton>
+        </ListItem>
+      ))}
+    </List>
+  );
+};
+
 function AppContent() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
@@ -28,35 +64,9 @@ function AppContent() {
     setMobileOpen(!mobileOpen);
   };
 
-  const menuItems = [
-    { text: 'Strona główna', path: '/' },
-    { text: 'Gra matematyczna', path: '/games/math' },
-    { text: 'Kontakt', path: '/games/contact' }
-  ];
-
   const drawer = (
     <Box sx={{ width: 220 }} role="presentation" onClick={handleDrawerToggle}>
-      <List>
-        {menuItems.map((item, index) => (
-          <ListItem key={index} disablePadding>
-            <ListItemButton
-              component={RouterLink}
-              to={item.path}
-              selected={location.pathname === item.path}
-              sx={{
-                '&.Mui-selected': {
-                  backgroundColor: theme.palette.action.selected,
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                  },
-                },
-              }}
-            >
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+      <MenuList />
     </Box>
   );
 
@@ -93,6 +103,11 @@ function AppContent() {
             <Typography variant="body1" paragraph>
               Projekt opiera się na zasadach Material Design i zapewnia czyste, nowoczesne wrażenia użytkownika.
             </Typography>
+            
+            <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+              Dostępne gry:
+            </Typography>
+            <MenuList />
           </Container>
         );
     }

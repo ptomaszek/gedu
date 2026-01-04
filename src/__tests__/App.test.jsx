@@ -22,9 +22,14 @@ describe('App (Landing Page)', () => {
       render(<App />);
       
       // Check that menu items are present using link selectors
-      expect(screen.getByRole('link', { name: 'Strona główna' })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Gra matematyczna' })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Kontakt' })).toBeInTheDocument();
+      // Note: There are now duplicate links (sidebar + landing page content)
+      const homeLinks = screen.getAllByRole('link', { name: 'Strona główna' });
+      const mathLinks = screen.getAllByRole('link', { name: 'Gra matematyczna' });
+      const contactLinks = screen.getAllByRole('link', { name: 'Kontakt' });
+      
+      expect(homeLinks).toHaveLength(2);
+      expect(mathLinks).toHaveLength(2);
+      expect(contactLinks).toHaveLength(2);
     });
   });
 });
