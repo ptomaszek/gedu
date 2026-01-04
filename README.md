@@ -7,7 +7,6 @@
  - usun strzalki math game
  - test mobile math game
  - ai md tests
- - favico
 
 ## GENAIs
  - kat-coder-pro:free
