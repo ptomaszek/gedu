@@ -14,6 +14,9 @@ docker-compose restart
 
 # Rebuild
 docker-compose up --build
+
+# Stop container (if running), rebuild image and start container in one go
+docker-compose down && docker-compose up --build
 ```
 
 ## Live Reload
