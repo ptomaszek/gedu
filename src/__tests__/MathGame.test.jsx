@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { fireEvent } from '@testing-library/react'
 import MathGame from '../MathGame'
 
 describe('MathGame', () => {
@@ -15,7 +16,7 @@ describe('MathGame', () => {
 
   it('has a skip button', () => {
     render(<MathGame />)
-    expect(screen.getByText('Pomiń / Nowe pytanie')).toBeInTheDocument()
+    expect(screen.getByText('Następne')).toBeInTheDocument()
   })
 
   it('has an answer input field', () => {
@@ -30,7 +31,7 @@ describe('MathGame', () => {
       // Check all three buttons are present
       expect(screen.getByText('Zatwierdź')).toBeInTheDocument()
       expect(screen.getByText('Zobacz odpowiedź')).toBeInTheDocument()
-      expect(screen.getByText('Pomiń / Nowe pytanie')).toBeInTheDocument()
+      expect(screen.getByText('Następne')).toBeInTheDocument()
     })
 
     it('shows all 3 buttons after entering an answer', () => {
@@ -43,7 +44,7 @@ describe('MathGame', () => {
       // All buttons should still be visible
       expect(screen.getByText('Zatwierdź')).toBeInTheDocument()
       expect(screen.getByText('Zobacz odpowiedź')).toBeInTheDocument()
-      expect(screen.getByText('Pomiń / Nowe pytanie')).toBeInTheDocument()
+      expect(screen.getByText('Następne')).toBeInTheDocument()
     })
 
     it('shows all 3 buttons after submitting a wrong answer', () => {
@@ -59,7 +60,7 @@ describe('MathGame', () => {
       // All buttons should still be visible
       expect(screen.getByText('Zatwierdź')).toBeInTheDocument()
       expect(screen.getByText('Zobacz odpowiedź')).toBeInTheDocument()
-      expect(screen.getByText('Pomiń / Nowe pytanie')).toBeInTheDocument()
+      expect(screen.getByText('Następne')).toBeInTheDocument()
     })
 
     it('shows all 3 buttons after submitting a correct answer', () => {
@@ -76,7 +77,7 @@ describe('MathGame', () => {
       // All buttons should still be visible
       expect(screen.getByText('Zatwierdź')).toBeInTheDocument()
       expect(screen.getByText('Zobacz odpowiedź')).toBeInTheDocument()
-      expect(screen.getByText('Pomiń / Nowe pytanie')).toBeInTheDocument()
+      expect(screen.getByText('Następne')).toBeInTheDocument()
     })
 
     it('shows the correct answer when "Zobacz odpowiedź" button is clicked', async () => {
@@ -97,20 +98,26 @@ describe('MathGame', () => {
       
       // Get elements
       const input = screen.getByPlaceholderText('?')
-      const submitButton = screen.getByText('Zatwierdź')
+      const form = input.closest('form')
       const showAnswerButton = screen.getByText('Zobacz odpowiedź')
       
-      // Enter an invalid/wrong answer
-      await userEvent.type(input, '999')
+      // Enter an invalid/wrong answer using userEvent.type with a longer delay
+      await userEvent.type(input, '999', { delay: 100 })
       
-      // Submit the wrong answer
-      await userEvent.click(submitButton)
+      // Submit the wrong answer by submitting the form directly
+      fireEvent.submit(form)
+      
+      // Wait for the error message to appear
+      await screen.findByText('Błędnie! Spróbuj ponownie lub zobacz odpowiedź.')
       
       // Verify error message appears
       expect(screen.getByText('Błędnie! Spróbuj ponownie lub zobacz odpowiedź.')).toBeInTheDocument()
       
       // Now click "Zobacz odpowiedź" button
       await userEvent.click(showAnswerButton)
+      
+      // Wait for the correct answer message to appear
+      await screen.findByText(/Poprawna odpowiedź to:/)
       
       // Should show a message with the correct answer format
       expect(screen.getByText(/Poprawna odpowiedź to:/)).toBeInTheDocument()

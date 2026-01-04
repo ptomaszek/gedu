@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import TextField from '@mui/material/TextField';
 
 function MathGame() {
   const [num1, setNum1] = useState(0);
@@ -7,6 +8,7 @@ function MathGame() {
   const [answer, setAnswer] = useState('');
   const [message, setMessage] = useState('');
   const [isCorrect, setIsCorrect] = useState(false);
+  const inputRef = useRef(null);
 
   const generateQuestion = () => {
     // Generate two numbers with result 0-20
@@ -55,10 +57,29 @@ function MathGame() {
     generateQuestion();
   };
 
-  // Initialize with first question
+  // Initialize with first question and focus input
   useEffect(() => {
     generateQuestion();
   }, []);
+
+  // Focus input when component mounts or when a new question is generated
+  useEffect(() => {
+    if (inputRef.current) {
+      // For Material UI TextField, we need to focus the input element inside
+      const inputElement = inputRef.current.querySelector('input');
+      if (inputElement) {
+        inputElement.focus();
+      } else {
+        // Fallback for cases where the input isn't immediately available
+        setTimeout(() => {
+          const fallbackInput = inputRef.current?.querySelector('input');
+          if (fallbackInput) {
+            fallbackInput.focus();
+          }
+        }, 100);
+      }
+    }
+  }, [num1, num2, operation]);
 
   return (
     <div style={{
@@ -76,25 +97,44 @@ function MathGame() {
       
       <div style={{ marginBottom: '20px' }}>
         <form onSubmit={handleSubmit}>
-          <div style={{ fontSize: '1.5rem', marginBottom: '10px' }}>
+          <div style={{ fontSize: '1.5rem', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
             <span>
               {num1} {operation} {num2} = 
             </span>
-            <input
+            <TextField
+              ref={inputRef}
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               placeholder="?"
-              style={{
-                padding: '10px',
-                fontSize: '1.5rem',
-                border: '2px solid #007bff',
-                borderRadius: '5px',
-                width: '80px',
-                textAlign: 'center',
-                backgroundColor: isCorrect ? '#d4edda' : 'white'
-              }}
               disabled={isCorrect}
+              variant="outlined"
+              size="medium"
+              sx={{
+                width: '80px',
+                '& .MuiOutlinedInput-root': {
+                  fontSize: '1.5rem',
+                  textAlign: 'center',
+                  backgroundColor: isCorrect ? '#d4edda' : 'white',
+                  '&.Mui-disabled': {
+                    backgroundColor: '#e9ecef',
+                  }
+                }
+              }}
+              inputProps={{
+                min: 0,
+                max: 20,
+                step: 1,
+                inputMode: 'numeric',
+                pattern: '[0-9]*',
+                style: {
+                  padding: '10px',
+                  border: '2px solid #007bff',
+                  borderRadius: '5px'
+                }
+              }}
             />
           </div>
           <button
@@ -108,62 +148,63 @@ function MathGame() {
               border: 'none',
               borderRadius: '5px',
               cursor: isCorrect ? 'default' : 'pointer',
-              marginRight: '10px'
+              marginRight: '10px',
+              marginBottom: '10px'
             }}
           >
             {isCorrect ? 'Poprawnie!' : 'Zatwierdź'}
           </button>
           <br />
-          <button
-            type="button"
-            onClick={handleShowAnswer}
-            style={{
-              padding: '10px 20px',
-              fontSize: '1rem',
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              marginTop: '10px'
-            }}
-          >
-            Zobacz odpowiedź
-          </button>
+          <div style={{ 
+            minHeight: '60px',
+            marginTop: '10px',
+            marginBottom: '10px'
+          }}>
+            {message && (
+              <div style={{
+                padding: '10px',
+                borderRadius: '5px',
+                backgroundColor: isCorrect ? '#d4edda' : '#f8d7da',
+                color: isCorrect ? '#155724' : '#721c24',
+                border: `1px solid ${isCorrect ? '#c3e6cb' : '#f5c6cb'}`
+              }}>
+                {message}
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <button
+              type="button"
+              onClick={handleShowAnswer}
+              style={{
+                padding: '10px 20px',
+                fontSize: '1rem',
+                backgroundColor: '#ffc107',
+                color: '#856404',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer'
+              }}
+            >
+              Zobacz odpowiedź
+            </button>
+            <button
+              onClick={handleSkip}
+              style={{
+                padding: '10px 20px',
+                fontSize: '1rem',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              Następne
+            </button>
+          </div>
         </form>
-      </div>
-
-      {message && (
-        <div style={{
-          marginBottom: '20px',
-          padding: '10px',
-          borderRadius: '5px',
-          backgroundColor: isCorrect ? '#d4edda' : '#f8d7da',
-          color: isCorrect ? '#155724' : '#721c24',
-          border: `1px solid ${isCorrect ? '#c3e6cb' : '#f5c6cb'}`
-        }}>
-          {message}
-        </div>
-      )}
-
-      <button
-        onClick={handleSkip}
-        style={{
-          padding: '10px 20px',
-          fontSize: '1rem',
-          backgroundColor: '#ffc107',
-          color: '#856404',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-          fontWeight: 'bold'
-        }}
-      >
-        Pomiń / Nowe pytanie
-      </button>
-
-      <div style={{ marginTop: '20px', fontSize: '0.9rem', color: '#6c757d' }}>
-        Odpowiedzi są w zakresie 0-20
       </div>
     </div>
   );
