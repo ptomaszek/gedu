@@ -1,11 +1,20 @@
-# IntelliJ IDEA project files
-.idea/
-*.iml
+# Jekyll generated files
+_site/
+.jekyll-cache/
+.jekyll-metadata
 
-# IDE temporary files
+# Ruby dependencies
+Gemfile.lock
+
+# IDE files
+.idea/
+.vscode/
 *.swp
-*~
+*.swo
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
