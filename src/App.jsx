@@ -121,6 +121,10 @@ function AppContent() {
                         noWrap
                         sx={{ cursor: 'pointer' }}
                         onClick={() => navigate('/')}
+                        component={RouterLink}
+                        to="/"
+                        color="inherit"
+                        style={{ textDecoration: 'none' }}
                     >
                         Gry dla XY
                     </Typography>
