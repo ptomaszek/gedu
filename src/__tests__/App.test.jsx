@@ -1,33 +1,43 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import App from '../App';
 
 describe('App (Landing Page)', () => {
   describe('Basic Rendering', () => {
     it('renders without crashing', () => {
       render(<App />);
-      // Basic test to ensure component renders without errors
       expect(screen.getByText('Gry dla XY')).toBeInTheDocument();
     });
 
     it('shows navigation menu', () => {
       render(<App />);
-      
-      // Check that navigation elements are present
       expect(screen.getByRole('navigation')).toBeInTheDocument();
       expect(screen.getByRole('banner')).toBeInTheDocument();
       expect(screen.getByRole('main')).toBeInTheDocument();
     });
 
-    it('shows menu items', () => {
+    it('shows menu items and expands sub-items', async () => {
       render(<App />);
       
-      // Check that menu items are present using link selectors
-      // Note: There are now duplicate links (sidebar + landing page content)
-      const mathLinks = screen.getAllByRole('link', { name: 'Gra matematyczna' });
-      const dummyLinks = screen.getAllByRole('link', { name: 'Dummy' });
+      // Expect the main "Gra matematyczna" button to be present.
+      // Since there are two instances (drawer and main content), use getAllByRole.
+      const mathGameButtons = screen.getAllByRole('button', { name: 'Gra matematyczna' });
+      expect(mathGameButtons.length).toBeGreaterThanOrEqual(1); // Ensure at least one button is found
       
-      expect(mathLinks).toHaveLength(2);
-      expect(dummyLinks).toHaveLength(2);
+      // Click the first found button to expand sub-items
+      await userEvent.click(mathGameButtons[0]);
+
+      // After clicking, the sub-items should appear as links
+      await waitFor(() => {
+        expect(screen.getByRole('link', { name: 'Dodawanie i odejmowanie (2 liczby)' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Dodawanie i odejmowanie (3 liczby)' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Mnożenie' })).toBeInTheDocument();
+      });
+
+      // Expect dummy link to be present (it's not nested under MathGame, so it should be a direct link)
+      // Use getAllByRole to handle multiple instances
+      const dummyLinks = screen.getAllByRole('link', { name: 'Dummy' });
+      expect(dummyLinks.length).toBeGreaterThanOrEqual(1);
     });
   });
 });

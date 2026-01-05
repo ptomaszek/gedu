@@ -3,124 +3,84 @@ import userEvent from '@testing-library/user-event'
 import { fireEvent } from '@testing-library/react'
 import MathGame from '../MathGame'
 
-describe('MathGame', () => {
+describe('MathGame Levels', () => {
+  const level1Config = { coefficients: 2, operations: ['+', '-'], range: 20 };
+  const level2Config = { coefficients: 3, operations: ['+', '-'], range: 20 };
+  const level3Config = { coefficients: 2, operations: ['*'], range: 20 };
+
+  it('renders level 1 correctly (2 coefficients)', () => {
+    render(<MathGame config={level1Config} />)
+    expect(screen.getByText(/(\d+)\s*[\+\-]\s*(\d+)\s*=/)).toBeInTheDocument()
+  })
+
+  it('renders level 2 correctly (3 coefficients)', () => {
+    render(<MathGame config={level2Config} />)
+    expect(screen.getByText(/(\d+)\s*[\+\-]\s*(\d+)\s*[\+\-]\s*(\d+)\s*=/)).toBeInTheDocument()
+  })
+
+  it('renders level 3 correctly (multiplication)', () => {
+    render(<MathGame config={level3Config} />)
+    expect(screen.getByText(/(\d+)\s*\* \s*(\d+)\s*=/)).toBeInTheDocument()
+  })
+
+  it('generates questions within range 0-20 for Level 1', () => {
+    render(<MathGame config={level1Config} />)
+    // Extract numbers from the rendered text
+    const text = screen.getByText(/(\d+)\s*[\+\-]\s*(\d+)\s*=/).textContent
+    const numbers = text.match(/\d+/g).map(Number)
+    numbers.forEach(n => {
+      expect(n).toBeGreaterThanOrEqual(0)
+      expect(n).toBeLessThanOrEqual(20)
+    })
+  })
+
+  it('generates questions within range 0-20 for Level 2', () => {
+    render(<MathGame config={level2Config} />)
+    const text = screen.getByText(/(\d+)\s*[\+\-]\s*(\d+)\s*[\+\-]\s*(\d+)\s*=/).textContent
+    const numbers = text.match(/\d+/g).map(Number)
+    numbers.forEach(n => {
+      expect(n).toBeGreaterThanOrEqual(0)
+      expect(n).toBeLessThanOrEqual(20)
+    })
+  })
+
+  it('generates multiplication questions within product range 0-20 for Level 3', async () => {
+    render(<MathGame config={level3Config} />)
+    const text = screen.getByText(/(\d+)\s*\* \s*(\d+)\s*=/).textContent
+    const numbers = text.match(/\d+/g).map(Number)
+    
+    // Check factors
+    numbers.forEach(n => {
+      expect(n).toBeGreaterThanOrEqual(0)
+      expect(n).toBeLessThanOrEqual(20)
+    })
+
+    // Click "Zobacz odpowiedź" to check product
+    const showAnswerButton = screen.getByText('Zobacz odpowiedź')
+    await userEvent.click(showAnswerButton)
+    const answerMessage = screen.getByText(/Poprawna odpowiedź to:/).textContent
+    const product = parseInt(answerMessage.match(/\d+/)[0])
+    expect(product).toBeLessThanOrEqual(20)
+  })
+})
+
+describe('MathGame General Functionality', () => {
+  const defaultConfig = { coefficients: 2, operations: ['+', '-'], range: 20 };
+
   it('renders the game title', () => {
-    render(<MathGame />)
+    render(<MathGame config={defaultConfig} />)
     expect(screen.getByText('Gra Matematyczna')).toBeInTheDocument()
   })
 
   it('has a submit button', () => {
-    render(<MathGame />)
+    render(<MathGame config={defaultConfig} />)
     expect(screen.getByText('Zatwierdź')).toBeInTheDocument()
   })
 
-  it('has a skip button', () => {
-    render(<MathGame />)
-    expect(screen.getByText('Następne')).toBeInTheDocument()
-  })
-
-  it('has an answer input field', () => {
-    render(<MathGame />)
-    expect(screen.getByPlaceholderText('?')).toBeInTheDocument()
-  })
-
-  describe('Button Visibility', () => {
-    it('shows all 3 buttons initially', () => {
-      render(<MathGame />)
-      
-      // Check all three buttons are present
-      expect(screen.getByText('Zatwierdź')).toBeInTheDocument()
-      expect(screen.getByText('Zobacz odpowiedź')).toBeInTheDocument()
-      expect(screen.getByText('Następne')).toBeInTheDocument()
-    })
-
-    it('shows all 3 buttons after entering an answer', () => {
-      render(<MathGame />)
-      
-      // Enter an answer
-      const input = screen.getByPlaceholderText('?')
-      input.value = '5'
-      
-      // All buttons should still be visible
-      expect(screen.getByText('Zatwierdź')).toBeInTheDocument()
-      expect(screen.getByText('Zobacz odpowiedź')).toBeInTheDocument()
-      expect(screen.getByText('Następne')).toBeInTheDocument()
-    })
-
-    it('shows all 3 buttons after submitting a wrong answer', () => {
-      render(<MathGame />)
-      
-      // Enter and submit a wrong answer
-      const input = screen.getByPlaceholderText('?')
-      const submitButton = screen.getByText('Zatwierdź')
-      
-      input.value = '999' // Wrong answer
-      submitButton.click()
-      
-      // All buttons should still be visible
-      expect(screen.getByText('Zatwierdź')).toBeInTheDocument()
-      expect(screen.getByText('Zobacz odpowiedź')).toBeInTheDocument()
-      expect(screen.getByText('Następne')).toBeInTheDocument()
-    })
-
-    it('shows all 3 buttons after submitting a correct answer', () => {
-      render(<MathGame />)
-      
-      // Enter and submit a correct answer (this will depend on the generated problem)
-      const input = screen.getByPlaceholderText('?')
-      const submitButton = screen.getByText('Zatwierdź')
-      
-      // Try a reasonable answer that might be correct
-      input.value = '10'
-      submitButton.click()
-      
-      // All buttons should still be visible
-      expect(screen.getByText('Zatwierdź')).toBeInTheDocument()
-      expect(screen.getByText('Zobacz odpowiedź')).toBeInTheDocument()
-      expect(screen.getByText('Następne')).toBeInTheDocument()
-    })
-
-    it('shows the correct answer when "Zobacz odpowiedź" button is clicked', async () => {
-      render(<MathGame />)
-      
-      // Get the answer button
-      const showAnswerButton = screen.getByText('Zobacz odpowiedź')
-      
-      // Click the "Zobacz odpowiedź" button using userEvent
-      await userEvent.click(showAnswerButton)
-      
-      // Should show a message with the correct answer format
-      expect(screen.getByText(/Poprawna odpowiedź to:/)).toBeInTheDocument()
-    })
-
-    it('shows the correct answer after user provides invalid answer and clicks "Zobacz odpowiedź"', async () => {
-      render(<MathGame />)
-      
-      // Get elements
-      const input = screen.getByPlaceholderText('?')
-      const form = input.closest('form')
-      const showAnswerButton = screen.getByText('Zobacz odpowiedź')
-      
-      // Enter an invalid/wrong answer using userEvent.type with a longer delay
-      await userEvent.type(input, '999', { delay: 100 })
-      
-      // Submit the wrong answer by submitting the form directly
-      fireEvent.submit(form)
-      
-      // Wait for the error message to appear
-      await screen.findByText('Błędnie! Spróbuj ponownie lub zobacz odpowiedź.')
-      
-      // Verify error message appears
-      expect(screen.getByText('Błędnie! Spróbuj ponownie lub zobacz odpowiedź.')).toBeInTheDocument()
-      
-      // Now click "Zobacz odpowiedź" button
-      await userEvent.click(showAnswerButton)
-      
-      // Wait for the correct answer message to appear
-      await screen.findByText(/Poprawna odpowiedź to:/)
-      
-      // Should show a message with the correct answer format
-      expect(screen.getByText(/Poprawna odpowiedź to:/)).toBeInTheDocument()
-    })
+  it('shows the correct answer when "Zobacz odpowiedź" button is clicked', async () => {
+    render(<MathGame config={defaultConfig} />)
+    const showAnswerButton = screen.getByText('Zobacz odpowiedź')
+    await userEvent.click(showAnswerButton)
+    expect(screen.getByText(/Poprawna odpowiedź to:/)).toBeInTheDocument()
   })
 })

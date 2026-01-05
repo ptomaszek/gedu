@@ -1,43 +1,87 @@
 import React, { useState, useEffect, useRef } from 'react';
 import TextField from '@mui/material/TextField';
 
-function MathGame() {
-  const [num1, setNum1] = useState(0);
-  const [num2, setNum2] = useState(0);
-  const [operation, setOperation] = useState('+');
+function MathGame({ config }) {
+  const { coefficients = 2, operations = ['+', '-'], range = 20 } = config || {};
+  const [nums, setNums] = useState([]);
+  const [ops, setOps] = useState([]);
   const [answer, setAnswer] = useState('');
   const [message, setMessage] = useState('');
   const [isCorrect, setIsCorrect] = useState(false);
   const inputRef = useRef(null);
 
-  const generateQuestion = () => {
-    // Generate two numbers with result 0-20
-    const n1 = Math.floor(Math.random() * 21);
-    const ops = ['+', '-'];
-    const op = ops[Math.floor(Math.random() * ops.length)];
-    
-    let n2;
-    if (op === '+') {
-      n2 = Math.floor(Math.random() * (21 - n1));
-    } else {
-      n2 = Math.floor(Math.random() * (n1 + 1));
+  const focusInput = () => {
+    if (inputRef.current) {
+      const inputElement = inputRef.current.querySelector('input');
+      if (inputElement) {
+        inputElement.focus();
+        inputElement.select(); // Select existing text
+      }
     }
-    
-    setNum1(n1);
-    setNum2(n2);
-    setOperation(op);
+  };
+
+  const generateQuestion = () => {
+    let newNums = [];
+    let newOps = [];
+    let currentResult = 0;
+
+    if (operations.includes('*')) {
+      const n1 = Math.floor(Math.random() * (range + 1));
+      let n2;
+      if (n1 === 0) {
+        n2 = Math.floor(Math.random() * (range + 1));
+      } else {
+        n2 = Math.floor(Math.random() * Math.floor(range / n1 + 1));
+      }
+      newNums = [n1, n2];
+      newOps = ['*'];
+    } else {
+      for (let i = 0; i < coefficients; i++) {
+        if (i === 0) {
+          const n = Math.floor(Math.random() * (range + 1));
+          newNums.push(n);
+          currentResult = n;
+        } else {
+          const op = operations[Math.floor(Math.random() * operations.length)];
+          newOps.push(op);
+          
+          let n;
+          if (op === '+') {
+            n = Math.floor(Math.random() * (range - currentResult + 1));
+            currentResult += n;
+          } else {
+            n = Math.floor(Math.random() * (currentResult + 1));
+            currentResult -= n;
+          }
+          newNums.push(n);
+        }
+      }
+    }
+
+    setNums(newNums);
+    setOps(newOps);
     setAnswer('');
     setMessage('');
     setIsCorrect(false);
   };
 
+  const getCorrectAnswer = () => {
+    if (nums.length === 0) return 0;
+    let result = nums[0];
+    for (let i = 0; i < ops.length; i++) {
+      if (ops[i] === '+') result += nums[i + 1];
+      else if (ops[i] === '-') result -= nums[i + 1];
+      else if (ops[i] === '*') result *= nums[i + 1];
+    }
+    return result;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     if (answer === '') return;
 
     const userAnswer = parseInt(answer);
-    const correctAnswer = operation === '+' ? num1 + num2 : num1 - num2;
+    const correctAnswer = getCorrectAnswer();
 
     if (userAnswer === correctAnswer) {
       setMessage('Poprawnie! 🎉');
@@ -45,46 +89,41 @@ function MathGame() {
     } else {
       setMessage('Błędnie! Spróbuj ponownie lub zobacz odpowiedź.');
       setIsCorrect(false);
+      focusInput(); // Focus and select after wrong answer
     }
   };
 
   const handleShowAnswer = () => {
-    const correctAnswer = operation === '+' ? num1 + num2 : num1 - num2;
-    setMessage(`Poprawna odpowiedź to: ${correctAnswer}`);
+    setMessage(`Poprawna odpowiedź to: ${getCorrectAnswer()}`);
   };
 
   const handleSkip = () => {
     generateQuestion();
   };
 
-  // Initialize with first question and focus input
   useEffect(() => {
     generateQuestion();
-  }, []);
+  }, [config]);
 
-  // Focus input when component mounts or when a new question is generated
   useEffect(() => {
-    if (inputRef.current) {
-      // For Material UI TextField, we need to focus the input element inside
-      const inputElement = inputRef.current.querySelector('input');
-      if (inputElement) {
-        inputElement.focus();
-      } else {
-        // Fallback for cases where the input isn't immediately available
-        setTimeout(() => {
-          const fallbackInput = inputRef.current?.querySelector('input');
-          if (fallbackInput) {
-            fallbackInput.focus();
-          }
-        }, 100);
+    // Focus and select input after new question generation or component mount
+    focusInput();
+  }, [nums, ops]); // Depend on nums and ops to re-focus after question changes
+
+  const renderExpression = () => {
+    let expr = [];
+    for (let i = 0; i < nums.length; i++) {
+      expr.push(nums[i]);
+      if (i < ops.length) {
+        expr.push(ops[i] === '*' ? '*' : ops[i]);
       }
     }
-  }, [num1, num2, operation]);
+    return expr.join(' ') + ' =';
+  };
 
   return (
     <div style={{
       textAlign: 'center',
-      marginTop: '50px',
       fontFamily: 'Arial, sans-serif',
       maxWidth: '500px',
       margin: '50px auto',
@@ -99,7 +138,7 @@ function MathGame() {
         <form onSubmit={handleSubmit}>
           <div style={{ fontSize: '1.5rem', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
             <span>
-              {num1} {operation} {num2} = 
+              {renderExpression()}
             </span>
             <TextField
               ref={inputRef}
@@ -125,7 +164,7 @@ function MathGame() {
               }}
               inputProps={{
                 min: 0,
-                max: 20,
+                max: range * coefficients, // Approximate max
                 step: 1,
                 inputMode: 'numeric',
                 pattern: '[0-9]*',
@@ -189,6 +228,7 @@ function MathGame() {
               Zobacz odpowiedź
             </button>
             <button
+              type="button"
               onClick={handleSkip}
               style={{
                 padding: '10px 20px',
