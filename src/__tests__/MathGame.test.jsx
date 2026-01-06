@@ -67,11 +67,6 @@ describe('MathGame Levels', () => {
 describe('MathGame General Functionality', () => {
   const defaultConfig = { coefficients: 2, operations: ['+', '-'], range: 20 };
 
-  it('renders the game title', () => {
-    render(<MathGame config={defaultConfig} />)
-    expect(screen.getByText('Gra Matematyczna')).toBeInTheDocument()
-  })
-
   it('has a submit button', () => {
     render(<MathGame config={defaultConfig} />)
     expect(screen.getByText('Zatwierdź')).toBeInTheDocument()

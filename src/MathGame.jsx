@@ -132,8 +132,6 @@ function MathGame({ config }) {
       borderRadius: '10px',
       backgroundColor: '#f8f9fa'
     }}>
-      <h2>Gra Matematyczna</h2>
-      
       <div style={{ marginBottom: '20px' }}>
         <form onSubmit={handleSubmit}>
           <div style={{ fontSize: '1.5rem', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>

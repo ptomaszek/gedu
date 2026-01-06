@@ -19,9 +19,9 @@ describe('App (Landing Page)', () => {
     it('shows menu items and expands sub-items', async () => {
       render(<App />);
       
-      // Expect the main "Gra matematyczna" button to be present.
+      // Expect the main "Matematyka" button to be present.
       // Since there are two instances (drawer and main content), use getAllByRole.
-      const mathGameButtons = screen.getAllByRole('button', { name: 'Gra matematyczna' });
+      const mathGameButtons = screen.getAllByRole('button', { name: 'Matematyka' });
       expect(mathGameButtons.length).toBeGreaterThanOrEqual(1); // Ensure at least one button is found
       
       // Click the first found button to expand sub-items
@@ -29,9 +29,9 @@ describe('App (Landing Page)', () => {
 
       // After clicking, the sub-items should appear as links
       await waitFor(() => {
-        expect(screen.getByRole('link', { name: 'Dodawanie i odejmowanie (2 liczby)' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'Dodawanie i odejmowanie (3 liczby)' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'Mnożenie' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Poziom 1' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Poziom 2' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Poziom 3' })).toBeInTheDocument();
       });
 
       // Expect dummy link to be present (it's not nested under MathGame, so it should be a direct link)

@@ -24,12 +24,12 @@ import MathGame from './MathGame';
 // Centralized menu config with nesting support
 const menuItems = [
     {
-        text: 'Gra matematyczna',
+        text: 'Matematyka',
         path: '/games/math',
         subitems: [
-            { id: 1, text: 'Dodawanie i odejmowanie (2 liczby)', path: '/games/math/levels/1', config: { coefficients: 2, operations: ['+', '-'], range: 20 } },
-            { id: 2, text: 'Dodawanie i odejmowanie (3 liczby)', path: '/games/math/levels/2', config: { coefficients: 3, operations: ['+', '-'], range: 20 } },
-            { id: 3, text: 'Mnożenie', path: '/games/math/levels/3', config: { coefficients: 2, operations: ['*'], range: 20 } }
+            { id: 1, text: 'Poziom 1', path: '/games/math/levels/1', config: { coefficients: 2, operations: ['+', '-'], range: 20 } },
+            { id: 2, text: 'Poziom 2', path: '/games/math/levels/2', config: { coefficients: 3, operations: ['+', '-'], range: 20 } },
+            { id: 3, text: 'Poziom 3', path: '/games/math/levels/3', config: { coefficients: 2, operations: ['*'], range: 20 } }
         ]
     },
     { text: 'Dummy', path: '/games/dummy' }
