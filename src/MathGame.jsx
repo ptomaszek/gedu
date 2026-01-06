@@ -1,272 +1,213 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {
+    useState,
+    useEffect,
+    useRef,
+    useCallback,
+    useMemo,
+} from 'react';
 import TextField from '@mui/material/TextField';
+import { useNavigate } from 'react-router-dom';
 import LevelProgressTracker from './LevelProgressTracker';
-import {useNavigate} from 'react-router-dom';
 
-function MathGame({config}) {
-    const {coefficients = 2, operations = ['+', '-'], range = 20} = config || {};
-    const [nums, setNums] = useState([]);
-    const [ops, setOps] = useState([]);
+/* ===================== Helpers ===================== */
+
+const calculateResult = (numbers, operators) =>
+    operators.reduce((result, op, i) => {
+        const next = numbers[i + 1];
+        if (op === '+') return result + next;
+        if (op === '-') return result - next;
+        if (op === '*') return result * next;
+        return result;
+    }, numbers[0] ?? 0);
+
+const buildExpression = (numbers, operators) =>
+    numbers
+        .flatMap((n, i) => (i < operators.length ? [n, operators[i]] : [n]))
+        .join(' ') + ' =';
+
+/* ===================== Component ===================== */
+
+function MathGame({ config }) {
+    const {
+        coefficients = 2,
+        operations = ['+', '-'],
+        range = 20,
+    } = config || {};
+
+    const [numbers, setNumbers] = useState([]);
+    const [operators, setOperators] = useState([]);
     const [answer, setAnswer] = useState('');
-    const [message, setMessage] = useState('');
-    const [isCorrect, setIsCorrect] = useState(false);
-    const progressTrackerRef = useRef(null);
+    const [status, setStatus] = useState('idle'); // idle | correct | wrong
+
     const inputRef = useRef(null);
+    const progressRef = useRef(null);
     const navigate = useNavigate();
 
-    const focusInput = () => {
-        if (inputRef.current) {
-            const inputElement = inputRef.current.querySelector('input');
-            if (inputElement) {
-                inputElement.focus();
-                inputElement.select(); // Select existing text
-            }
-        }
-    };
+    /* ===================== Focus ===================== */
 
-    const generateQuestion = () => {
-        let newNums = [];
-        let newOps = [];
-        let currentResult = 0;
+    const focusInput = useCallback(() => {
+        const input = inputRef.current?.querySelector('input');
+        input?.focus();
+        input?.select();
+    }, []);
+
+    /* ===================== Question Generation ===================== */
+
+    const generateQuestion = useCallback(() => {
+        let nums = [];
+        let ops = [];
+        let current = 0;
 
         if (operations.includes('*')) {
-            const n1 = Math.floor(Math.random() * (range + 1));
-            let n2;
-            if (n1 === 0) {
-                n2 = Math.floor(Math.random() * (range + 1));
-            } else {
-                n2 = Math.floor(Math.random() * Math.floor(range / n1 + 1));
-            }
-            newNums = [n1, n2];
-            newOps = ['*'];
+            const a = Math.floor(Math.random() * (range + 1));
+            const b =
+                a === 0
+                    ? Math.floor(Math.random() * (range + 1))
+                    : Math.floor(Math.random() * (Math.floor(range / a) + 1));
+
+            nums = [a, b];
+            ops = ['*'];
         } else {
             for (let i = 0; i < coefficients; i++) {
                 if (i === 0) {
-                    const n = Math.floor(Math.random() * (range + 1));
-                    newNums.push(n);
-                    currentResult = n;
+                    current = Math.floor(Math.random() * (range + 1));
+                    nums.push(current);
                 } else {
-                    const op = operations[Math.floor(Math.random() * operations.length)];
-                    newOps.push(op);
+                    const op =
+                        operations[Math.floor(Math.random() * operations.length)];
+                    ops.push(op);
 
                     let n;
                     if (op === '+') {
-                        n = Math.floor(Math.random() * (range - currentResult + 1));
-                        currentResult += n;
+                        n = Math.floor(Math.random() * (range - current + 1));
+                        current += n;
                     } else {
-                        n = Math.floor(Math.random() * (currentResult + 1));
-                        currentResult -= n;
+                        n = Math.floor(Math.random() * (current + 1));
+                        current -= n;
                     }
-                    newNums.push(n);
+                    nums.push(n);
                 }
             }
         }
 
-        setNums(newNums);
-        setOps(newOps);
+        setNumbers(nums);
+        setOperators(ops);
         setAnswer('');
-        setMessage('');
-        setIsCorrect(false);
-    };
+        setStatus('idle');
+    }, [coefficients, operations, range]);
 
-    const getCorrectAnswer = () => {
-        if (nums.length === 0) return 0;
-        let result = nums[0];
-        for (let i = 0; i < ops.length; i++) {
-            if (ops[i] === '+') result += nums[i + 1];
-            else if (ops[i] === '-') result -= nums[i + 1];
-            else if (ops[i] === '*') result *= nums[i + 1];
-        }
-        return result;
-    };
+    /* ===================== Derived ===================== */
+
+    const correctAnswer = useMemo(
+        () => calculateResult(numbers, operators),
+        [numbers, operators]
+    );
+
+    const expression = useMemo(
+        () => buildExpression(numbers, operators),
+        [numbers, operators]
+    );
+
+    /* ===================== Handlers ===================== */
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (answer === '') return;
+        if (!answer) return;
 
-        const userAnswer = parseInt(answer);
-        const correctAnswer = getCorrectAnswer();
+        const userAnswer = parseInt(answer, 10);
 
         if (userAnswer === correctAnswer) {
-            setMessage('Poprawnie! 🎉');
-            setIsCorrect(true);
-            // Notify progress tracker about correct answer
-            if (progressTrackerRef?.current?.handleCorrectAnswer) {
-                progressTrackerRef.current.handleCorrectAnswer();
-            }
-            // Generate new question after short delay
-            setTimeout(() => {
-                generateQuestion();
-            }, 1000);
+            setStatus('correct');
+            progressRef.current?.handleCorrectAnswer();
+            setTimeout(generateQuestion, 800);
         } else {
-            setMessage('Błąd! Spróbuj ponownie');
-            setIsCorrect(false);
-            focusInput(); // Focus and select after wrong answer
-            // Notify progress tracker about incorrect answer
-            if (progressTrackerRef?.current?.handleIncorrectAnswer) {
-                progressTrackerRef.current.handleIncorrectAnswer();
-            }
+            setStatus('wrong');
+            progressRef.current?.handleIncorrectAnswer();
+            focusInput();
         }
     };
 
-    const handleShowAnswer = () => {
-        setMessage(`Poprawna odpowiedź to: ${getCorrectAnswer()}`);
-    };
-
-    const handleSkip = () => {
-        generateQuestion();
-    };
-
-    // Callback for level restart
-    const handleLevelRestart = () => {
-        generateQuestion();
-    };
-
-    // Callback for level completion
-    const handleLevelComplete = () => {
-        // Could add additional logic here if needed
-    };
-
-    // Callback for next level navigation
     const handleNextLevel = () => {
-        // Find current level and navigate to next one
-        const currentPath = window.location.hash;
-        if (currentPath.includes('/levels/1')) {
-            navigate('/games/math/levels/2');
-        } else if (currentPath.includes('/levels/2')) {
-            navigate('/games/math/levels/3');
-        } else if (currentPath.includes('/levels/3')) {
-            // Could navigate to next game or show completion message
-            navigate('/games/math');
-        }
+        const path = window.location.hash;
+        if (path.includes('/levels/1')) navigate('/games/math/levels/2');
+        else if (path.includes('/levels/2')) navigate('/games/math/levels/3');
+        else navigate('/games/math');
     };
 
-    useEffect(() => {
-        generateQuestion();
-    }, [config]);
+    /* ===================== Effects ===================== */
 
-    useEffect(() => {
-        // Focus and select input after new question generation or component mount
-        focusInput();
-    }, [nums, ops]); // Depend on nums and ops to re-focus after question changes
+    useEffect(generateQuestion, [generateQuestion]);
+    useEffect(focusInput, [numbers, operators, focusInput]);
 
-    const renderExpression = () => {
-        let expr = [];
-        for (let i = 0; i < nums.length; i++) {
-            expr.push(nums[i]);
-            if (i < ops.length) {
-                expr.push(ops[i] === '*' ? '*' : ops[i]);
-            }
-        }
-        return expr.join(' ') + ' =';
-    };
+    /* ===================== Render ===================== */
 
     return (
         <LevelProgressTracker
-            ref={progressTrackerRef}
+            ref={progressRef}
             tasksToComplete={10}
             maxMistakes={3}
-            onLevelComplete={handleLevelComplete}
-            onLevelRestart={handleLevelRestart}
+            onLevelRestart={generateQuestion}
             onNextLevel={handleNextLevel}
         >
-            <div style={{
-                textAlign: 'center',
-                fontFamily: 'Arial, sans-serif',
-                minWidth: '250px',
-                maxWidth: '500px',
-                margin: '20px auto',
-                padding: '20px',
-                border: '2px solid #007bff',
-                borderRadius: '10px',
-                backgroundColor: '#f8f9fa'
-            }}>
-                <div style={{marginBottom: '20px'}}>
-                    <form onSubmit={handleSubmit}>
-                        <div style={{
-                            fontSize: '1.5rem',
-                            marginBottom: '10px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '10px'
-                        }}>
-            <span>
-              {renderExpression()}
-            </span>
-                            <TextField
-                                ref={inputRef}
-                                type="number"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                value={answer}
-                                onChange={(e) => setAnswer(e.target.value)}
-                                placeholder="?"
-                                disabled={isCorrect}
-                                variant="outlined"
-                                size="medium"
-                                sx={{
-                                    width: '80px',
-                                    '& .MuiOutlinedInput-root': {
-                                        fontSize: '1.5rem',
-                                        textAlign: 'center',
-                                        backgroundColor: isCorrect ? '#d4edda' : 'white',
-                                        '&.Mui-disabled': {
-                                            backgroundColor: '#e9ecef',
-                                        }
-                                    }
-                                }}
-                                inputProps={{
-                                    min: 0,
-                                    max: range * coefficients, // Approximate max
-                                    step: 1,
-                                    inputMode: 'numeric',
-                                    pattern: '[0-9]*',
-                                    style: {
-                                        padding: '10px',
-                                        border: '2px solid #007bff',
-                                        borderRadius: '5px'
-                                    }
-                                }}
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={isCorrect || answer === ''}
-                            style={{
-                                padding: '10px 20px',
-                                fontSize: '1rem',
-                                backgroundColor: isCorrect ? '#28a745' : '#007bff',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '5px',
-                                cursor: isCorrect ? 'default' : 'pointer',
-                                marginRight: '10px',
-                                marginBottom: '10px'
-                            }}
-                        >
-                            {isCorrect ? 'Poprawnie!' : 'Zatwierdź'}
-                        </button>
-                        <br/>
-                        <div style={{
-                            marginTop: '10px',
-                            marginBottom: '10px'
-                        }}>
-                            {message && (
-                                <div style={{
-                                    padding: '10px',
-                                    borderRadius: '5px',
-                                    backgroundColor: isCorrect ? '#d4edda' : '#f8d7da',
-                                    color: isCorrect ? '#155724' : '#721c24',
-                                    border: `1px solid ${isCorrect ? '#c3e6cb' : '#f5c6cb'}`
-                                }}>
-                                    {message}
-                                </div>
-                            )}
-                        </div>
-                    </form>
+            <form onSubmit={handleSubmit} style={{ textAlign: 'center' }}>
+                <div
+                    style={{
+                        fontSize: '1.5rem',
+                        marginBottom: 10,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: 8,
+                    }}
+                >
+                    <span>{expression}</span>
+
+                    <TextField
+                        ref={inputRef}
+                        type="number"
+                        value={answer}
+                        disabled={status === 'correct'}
+                        onChange={(e) => setAnswer(e.target.value)}
+                        sx={{
+                            width: 80,
+                            '& .MuiOutlinedInput-root': {
+                                backgroundColor:
+                                    status === 'correct'
+                                        ? '#d4edda'
+                                        : status === 'wrong'
+                                            ? '#f8d7da'
+                                            : 'white',
+                                transition: 'background-color 0.2s ease',
+                            },
+                        }}
+                    />
+
+                    {/* Reserved feedback slot (no layout shift) */}
+                    <span style={{ width: 28, textAlign: 'center', fontSize: '1.5rem' }}>
+            {status === 'correct' && '✅'}
+                        {status === 'wrong' && '❌'}
+          </span>
                 </div>
-            </div>
+
+                <button
+                    type="submit"
+                    disabled={status === 'correct' || !answer}
+                    style={{
+                        padding: '10px 20px',
+                        fontSize: '1rem',
+                        backgroundColor:
+                            status === 'correct' ? '#9cc7a3' : '#007bff',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor:
+                            status === 'correct' ? 'default' : 'pointer',
+                        opacity: status === 'correct' ? 0.8 : 1,
+                    }}
+                >
+                    Zatwierdź
+                </button>
+            </form>
         </LevelProgressTracker>
     );
 }

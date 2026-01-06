@@ -112,7 +112,7 @@ const LevelProgressTracker = forwardRef(({
                 />
                 <Typography variant="subtitle2" color={mistakesLeft <= 1 ? 'error.main' : 'text.secondary'}
                             sx={{mt: 0.5}}>
-                    Pozostałe błędy: {mistakesLeft}/{maxMistakes}
+                    Szanse: {mistakesLeft}/{maxMistakes}
                 </Typography>
             </Box>
 
