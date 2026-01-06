@@ -37,7 +37,7 @@ function MathGame({ config }) {
                 <LevelProgressTracker
                     key={`level-${level}`} // force remount on level change
                     ref={progressRef}
-                    tasksToComplete={2}
+                    tasksToComplete={10}
                     maxMistakes={3}
                     onLevelRestart={() => {
                         // Just signal MathQuestion to generate a new question

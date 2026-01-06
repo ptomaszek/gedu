@@ -25,18 +25,18 @@ function QuestionGenerator({ coefficients, operations, range, onQuestionGenerate
         let current = 0;
 
         if (operations.includes('*')) {
-            const a = Math.floor(Math.random() * (range + 1));
+            const a = getRandomNumber(range);
             const b =
                 a === 0
-                    ? Math.floor(Math.random() * (range + 1))
-                    : Math.floor(Math.random() * (Math.floor(range / a) + 1));
+                    ? getRandomNumber(range)
+                    : getRandomNumber(Math.floor(range / a));
 
             nums = [a, b];
             ops = ['*'];
         } else {
             for (let i = 0; i < coefficients; i++) {
                 if (i === 0) {
-                    current = Math.floor(Math.random() * (range + 1));
+                    current = getRandomNumber(range);
                     nums.push(current);
                 } else {
                     const op = operations[Math.floor(Math.random() * operations.length)];
@@ -44,10 +44,10 @@ function QuestionGenerator({ coefficients, operations, range, onQuestionGenerate
 
                     let n;
                     if (op === '+') {
-                        n = Math.floor(Math.random() * (range - current + 1));
+                        n = getRandomNumber(range - current);
                         current += n;
                     } else {
-                        n = Math.floor(Math.random() * (current + 1));
+                        n = getRandomNumber(current);
                         current -= n;
                     }
                     nums.push(n);
@@ -85,6 +85,13 @@ function QuestionGenerator({ coefficients, operations, range, onQuestionGenerate
 }
 
 /* ===================== Helper Functions ===================== */
+
+/**
+ * Generate a random number within the specified range
+ * @param {number} range - Maximum value for the random number
+ * @returns {number} Random number between 0 and range (inclusive)
+ */
+const getRandomNumber = (range) => Math.floor(Math.random() * (range + 1));
 
 /**
  * Calculate the result of a math expression given numbers and operators
