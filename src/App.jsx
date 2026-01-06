@@ -230,7 +230,6 @@ function AppContent() {
                     flexGrow: 1,
                     p: 3,
                     width: { md: 'calc(100% - 240px)' },
-                    minHeight: '100vh',
                     backgroundColor: '#f8f9fa'
                 }}
             >

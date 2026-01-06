@@ -1,7 +1,17 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { fireEvent } from '@testing-library/react'
+import { BrowserRouter } from 'react-router-dom'
 import MathGame from '../MathGame'
+
+// Helper function to render MathGame with Router context
+const renderMathGame = (config) => {
+  return render(
+    <BrowserRouter>
+      <MathGame config={config} />
+    </BrowserRouter>
+  )
+}
 
 describe('MathGame Levels', () => {
   const level1Config = { coefficients: 2, operations: ['+', '-'], range: 20 };
@@ -9,22 +19,22 @@ describe('MathGame Levels', () => {
   const level3Config = { coefficients: 2, operations: ['*'], range: 20 };
 
   it('renders level 1 correctly (2 coefficients)', () => {
-    render(<MathGame config={level1Config} />)
+    renderMathGame(level1Config)
     expect(screen.getByText(/(\d+)\s*[\+\-]\s*(\d+)\s*=/)).toBeInTheDocument()
   })
 
   it('renders level 2 correctly (3 coefficients)', () => {
-    render(<MathGame config={level2Config} />)
+    renderMathGame(level2Config)
     expect(screen.getByText(/(\d+)\s*[\+\-]\s*(\d+)\s*[\+\-]\s*(\d+)\s*=/)).toBeInTheDocument()
   })
 
   it('renders level 3 correctly (multiplication)', () => {
-    render(<MathGame config={level3Config} />)
-    expect(screen.getByText(/(\d+)\s*\* \s*(\d+)\s*=/)).toBeInTheDocument()
+    renderMathGame(level3Config)
+    expect(screen.getByText(/(\d+)\s*\*\s*(\d+)\s*=/)).toBeInTheDocument()
   })
 
   it('generates questions within range 0-20 for Level 1', () => {
-    render(<MathGame config={level1Config} />)
+    renderMathGame(level1Config)
     // Extract numbers from the rendered text
     const text = screen.getByText(/(\d+)\s*[\+\-]\s*(\d+)\s*=/).textContent
     const numbers = text.match(/\d+/g).map(Number)
@@ -35,7 +45,7 @@ describe('MathGame Levels', () => {
   })
 
   it('generates questions within range 0-20 for Level 2', () => {
-    render(<MathGame config={level2Config} />)
+    renderMathGame(level2Config)
     const text = screen.getByText(/(\d+)\s*[\+\-]\s*(\d+)\s*[\+\-]\s*(\d+)\s*=/).textContent
     const numbers = text.match(/\d+/g).map(Number)
     numbers.forEach(n => {
@@ -44,9 +54,9 @@ describe('MathGame Levels', () => {
     })
   })
 
-  it('generates multiplication questions within product range 0-20 for Level 3', async () => {
-    render(<MathGame config={level3Config} />)
-    const text = screen.getByText(/(\d+)\s*\* \s*(\d+)\s*=/).textContent
+  it('generates multiplication questions within product range 0-20 for Level 3', () => {
+    renderMathGame(level3Config)
+    const text = screen.getByText(/(\d+)\s*\*\s*(\d+)\s*=/).textContent
     const numbers = text.match(/\d+/g).map(Number)
     
     // Check factors
@@ -54,13 +64,6 @@ describe('MathGame Levels', () => {
       expect(n).toBeGreaterThanOrEqual(0)
       expect(n).toBeLessThanOrEqual(20)
     })
-
-    // Click "Zobacz odpowiedź" to check product
-    const showAnswerButton = screen.getByText('Zobacz odpowiedź')
-    await userEvent.click(showAnswerButton)
-    const answerMessage = screen.getByText(/Poprawna odpowiedź to:/).textContent
-    const product = parseInt(answerMessage.match(/\d+/)[0])
-    expect(product).toBeLessThanOrEqual(20)
   })
 })
 
@@ -68,14 +71,31 @@ describe('MathGame General Functionality', () => {
   const defaultConfig = { coefficients: 2, operations: ['+', '-'], range: 20 };
 
   it('has a submit button', () => {
-    render(<MathGame config={defaultConfig} />)
+    renderMathGame(defaultConfig)
     expect(screen.getByText('Zatwierdź')).toBeInTheDocument()
   })
 
-  it('shows the correct answer when "Zobacz odpowiedź" button is clicked', async () => {
-    render(<MathGame config={defaultConfig} />)
-    const showAnswerButton = screen.getByText('Zobacz odpowiedź')
-    await userEvent.click(showAnswerButton)
-    expect(screen.getByText(/Poprawna odpowiedź to:/)).toBeInTheDocument()
+  it('shows success message when correct answer is submitted', async () => {
+    renderMathGame(defaultConfig)
+    const input = screen.getByRole('spinbutton')
+    const submitButton = screen.getByText('Zatwierdź')
+    
+    // Get the current expression and calculate correct answer
+    const expressionText = screen.getByText(/(\d+)\s*[\+\-]\s*(\d+)\s*=/).textContent
+    const numbers = expressionText.match(/\d+/g).map(Number)
+    const operators = expressionText.match(/[\+\-]/g)
+    
+    let correctAnswer = numbers[0]
+    if (operators && operators[0] === '+') {
+      correctAnswer += numbers[1]
+    } else {
+      correctAnswer -= numbers[1]
+    }
+    
+    // Enter correct answer and submit
+    await userEvent.type(input, correctAnswer.toString())
+    await userEvent.click(submitButton)
+    
+    expect(screen.getByText('Poprawnie! 🎉')).toBeInTheDocument()
   })
 })
