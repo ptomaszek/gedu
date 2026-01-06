@@ -9,7 +9,6 @@ import {
     Box,
     Fade
 } from '@mui/material';
-import { Favorite } from '@mui/icons-material';
 
 /**
  * Reusable component for tracking level progress with configurable rules
@@ -119,16 +118,20 @@ const LevelProgressTracker = forwardRef(({
                 {Array.from({ length: maxMistakes }).map((_, index) => {
                     const isLost = index >= mistakesLeft;
                     return (
-                        <Favorite
+                        <span
                             key={index}
-                            sx={{
-                                fontSize: 18,
+                            style={{
+                                fontSize: 14,
                                 color: isLost ? '#ccc' : '#f44336',
-                                transition: 'color 0.3s, opacity 0.3s',
-                                opacity: isLost ? 0.4 : 1,
+                                transition: 'color 0.1s, opacity 0.5s, transform 0.1s',
+                                opacity: isLost ? 0.2 : 1,
                                 transform: isLost ? 'scale(0.8)' : 'scale(1)',
+                                lineHeight: 1,
+                                display: 'inline-block'
                             }}
-                        />
+                        >
+                            ❤️
+                        </span>
                     );
                 })}
             </Box>
