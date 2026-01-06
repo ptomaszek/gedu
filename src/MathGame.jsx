@@ -136,7 +136,10 @@ function MathGame({ config }) {
             setStatus('correct');
             setInputBg('#d4edda'); // green for correct
             progressRef.current?.handleCorrectAnswer();
-            setTimeout(generateQuestion, 800);
+            setTimeout(() => {
+                generateQuestion();
+                focusInput();
+            }, 800);
         } else {
             setStatus('wrong');
             setInputBg('#f8d7da'); // red
@@ -162,7 +165,6 @@ function MathGame({ config }) {
             return () => clearTimeout(timer);
         }
     }, [status]);
-    ;
 
     /* ===================== Initial setup ===================== */
     useEffect(generateQuestion, [generateQuestion]);
