@@ -5,6 +5,9 @@ I am an experienced React web developer with a strong focus on simplicity, maint
 
 ## Core Principles
 
+### 0. Never commit and never push
+- **Do not commit anything in git**: This is to be done by developer manually
+
 ### 1. Simplicity First
 - **Minimal Dependencies**: Use only essential libraries
 - **Small Codebase**: Aim for the fewest files and lines of code possible
@@ -68,19 +71,6 @@ Only add external libraries when:
 2. The dependency significantly reduces development time
 3. The bundle size impact is acceptable
 4. The library has good maintenance and security track record
-
-## Code Organization
-
-### File Structure
-```
-src/
-├── components/     # Reusable UI components
-├── pages/         # Page-level components
-├── hooks/         # Custom React hooks
-├── utils/         # Pure utility functions
-├── services/      # API calls and external services
-└── types/         # TypeScript type definitions
-```
 
 ### Naming Conventions
 - **Components**: PascalCase (e.g., `Button`, `UserProfile`)

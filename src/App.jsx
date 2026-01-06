@@ -18,7 +18,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-import { BrowserRouter as Router, useLocation, useNavigate, Link as RouterLink, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, useLocation, useNavigate, Link as RouterLink, Routes, Route } from 'react-router-dom';
 import MathGame from './MathGame';
 
 // Centralized menu config with nesting support
