@@ -7,9 +7,27 @@ import React, {
 } from 'react';
 import TextField from '@mui/material/TextField';
 import { useNavigate } from 'react-router-dom';
+import { InlineMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
 import LevelProgressTracker from './LevelProgressTracker';
 
 /* ===================== Helpers ===================== */
+const generateLevelDescription = (config) => {
+    const {coefficients, operations, range} = config;
+
+    // Map operations to Polish text
+    const operationNames = {
+        '+': 'Dodawanie',
+        '-': 'Odejmowanie',
+        '*': 'Mnożenie'
+    };
+
+    // Get unique operation names
+    const uniqueOperations = [...new Set(operations)];
+    const operationText = uniqueOperations.map(op => operationNames[op]).join(', ');
+
+    return `${operationText} w zakresie ${range}`;
+};
 
 const calculateResult = (numbers, operators) =>
     operators.reduce((result, op, i) => {
@@ -20,9 +38,13 @@ const calculateResult = (numbers, operators) =>
         return result;
     }, numbers[0] ?? 0);
 
-const buildExpression = (numbers, operators) =>
+const buildLatexExpression = (numbers, operators) =>
     numbers
-        .flatMap((n, i) => (i < operators.length ? [n, operators[i]] : [n]))
+        .flatMap((n, i) =>
+            i < operators.length
+                ? [n, operators[i] === '*' ? '\\times' : operators[i]]
+                : [n]
+        )
         .join(' ') + ' =';
 
 /* ===================== Component ===================== */
@@ -103,8 +125,8 @@ function MathGame({ config }) {
         [numbers, operators]
     );
 
-    const expression = useMemo(
-        () => buildExpression(numbers, operators),
+    const latexExpression = useMemo(
+        () => buildLatexExpression(numbers, operators),
         [numbers, operators]
     );
 
@@ -142,73 +164,98 @@ function MathGame({ config }) {
     /* ===================== Render ===================== */
 
     return (
-        <LevelProgressTracker
-            ref={progressRef}
-            tasksToComplete={10}
-            maxMistakes={3}
-            onLevelRestart={generateQuestion}
-            onNextLevel={handleNextLevel}
-        >
-            <form onSubmit={handleSubmit} style={{ textAlign: 'center' }}>
-                <div
-                    style={{
-                        fontSize: '1.5rem',
-                        marginBottom: 10,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        gap: 8,
-                    }}
-                >
-                    <span>{expression}</span>
+        <div style={{ textAlign: 'center', marginTop: 12 }}>
+            {/* ===================== Parent Info ===================== */}
+            <div
+                style={{
+                    fontSize: '0.85rem',
+                    fontStyle: 'italic',
+                    color: '#555',
+                    marginBottom: '24px', // extra spacing to separate from game
+                    opacity: 0.8,
+                    padding: '6px 12px',
+                    borderRadius: 6,
+                    backgroundColor: '#f7f7f7', // subtle background
+                    display: 'inline-block', // shrink to content width
+                }}
+            >
+                {generateLevelDescription(config)}
+            </div>
 
-                    <TextField
-                        ref={inputRef}
-                        type="number"
-                        value={answer}
-                        disabled={status === 'correct'}
-                        onChange={(e) => setAnswer(e.target.value)}
-                        sx={{
-                            width: 80,
-                            '& .MuiOutlinedInput-root': {
-                                backgroundColor:
-                                    status === 'correct'
-                                        ? '#d4edda'
-                                        : status === 'wrong'
-                                            ? '#f8d7da'
-                                            : 'white',
-                                transition: 'background-color 0.2s ease',
-                            },
+            {/* ===================== Game & Progress Tracker ===================== */}
+            <LevelProgressTracker
+                ref={progressRef}
+                tasksToComplete={10}
+                maxMistakes={3}
+                onLevelRestart={generateQuestion}
+                onNextLevel={handleNextLevel}
+            >
+                <form onSubmit={handleSubmit} style={{ textAlign: 'center' }}>
+                    <div
+                        style={{
+                            fontSize: '1.2rem',
+                            marginBottom: 10,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            gap: 8,
                         }}
-                    />
+                    >
+                        <InlineMath math={latexExpression} />
 
-                    {/* Reserved feedback slot (no layout shift) */}
-                    <span style={{ width: 28, textAlign: 'center', fontSize: '1.5rem' }}>
-            {status === 'correct' && '✅'}
-                        {status === 'wrong' && '❌'}
-          </span>
-                </div>
+                        <TextField
+                            ref={inputRef}
+                            type="number"
+                            value={answer}
+                            disabled={status === 'correct'}
+                            onChange={(e) => setAnswer(e.target.value)}
+                            sx={{
+                                width: 80,
+                                '& .MuiOutlinedInput-root': {
+                                    backgroundColor:
+                                        status === 'correct'
+                                            ? '#d4edda'
+                                            : status === 'wrong'
+                                                ? '#f8d7da'
+                                                : 'white',
+                                    transition: 'background-color 0.2s ease',
+                                },
+                            }}
+                        />
 
-                <button
-                    type="submit"
-                    disabled={status === 'correct' || !answer}
-                    style={{
-                        padding: '10px 20px',
-                        fontSize: '1rem',
-                        backgroundColor:
-                            status === 'correct' ? '#9cc7a3' : '#007bff',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor:
-                            status === 'correct' ? 'default' : 'pointer',
-                        opacity: status === 'correct' ? 0.8 : 1,
-                    }}
-                >
-                    Zatwierdź
-                </button>
-            </form>
-        </LevelProgressTracker>
+                        <span
+                            style={{
+                                width: 28,
+                                textAlign: 'center',
+                                fontSize: '1.5rem',
+                            }}
+                        >
+                        {status === 'correct' && '✅'}
+                            {status === 'wrong' && '❌'}
+                    </span>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={status === 'correct' || !answer}
+                        style={{
+                            padding: '10px 20px',
+                            fontSize: '1rem',
+                            backgroundColor:
+                                status === 'correct' ? '#9cc7a3' : '#007bff',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor:
+                                status === 'correct' ? 'default' : 'pointer',
+                            opacity: status === 'correct' ? 0.8 : 1,
+                        }}
+                    >
+                        Zatwierdź
+                    </button>
+                </form>
+            </LevelProgressTracker>
+        </div>
     );
 }
 
