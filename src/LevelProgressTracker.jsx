@@ -153,7 +153,7 @@ const LevelProgressTracker = forwardRef(({
                                 height: 12,
                                 borderRadius: 2,
                                 backgroundColor: isCompleted ? '#2196f3' : '#e0e0e0',
-                                transition: 'background-color 0.3s',
+                                transition: 'background-color 0.8s',
                             }}
                         />
                     );
