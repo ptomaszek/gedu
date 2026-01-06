@@ -3,21 +3,20 @@ import React, {
     useEffect,
     useRef,
     useCallback,
-    useMemo,
 } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import {useNavigate} from 'react-router-dom';
-import {InlineMath} from 'react-katex';
+import { useNavigate } from 'react-router-dom';
+import { InlineMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 import LevelProgressTracker from '../../LevelProgressTracker';
 import QuestionGenerator from './QuestionGenerator';
 
 /* ===================== Helpers ===================== */
 const generateLevelDescription = (config, levelNumber) => {
-    const {coefficients, operations, range} = config;
+    const { coefficients, operations, range } = config;
 
     const operationNames = {
         '+': 'Dodawanie',
@@ -50,13 +49,13 @@ const buildLatexExpression = (numbers, operators) =>
         .join(' ') + ' =';
 
 /* ===================== Component ===================== */
-
 function MathGame({ config }) {
     const { level, coefficients, operations, range } = config;
 
     const [answer, setAnswer] = useState('');
     const [status, setStatus] = useState('idle'); // idle | correct | wrong
     const [inputBg, setInputBg] = useState('white');
+    const [fade, setFade] = useState(true); // fade-in/out state
 
     const inputRef = useRef(null);
     const progressRef = useRef(null);
@@ -94,10 +93,17 @@ function MathGame({ config }) {
             setStatus('correct');
             setInputBg('#d4edda'); // green for correct
             progressRef.current?.handleCorrectAnswer();
+
             setTimeout(() => {
-                generateQuestion();
-                focusInput();
-            }, 800);
+                // fade out
+                setFade(false);
+
+                setTimeout(() => {
+                    generateQuestion(); // change question while hidden
+                    setFade(true); // fade in
+                    focusInput();
+                }, 250); // fade duration
+            }, 600);
         } else {
             setStatus('wrong');
             setInputBg('#f8d7da'); // red
@@ -133,7 +139,7 @@ function MathGame({ config }) {
     useEffect(() => {
         generateQuestion();
     }, []); // Only run once on mount
-    
+
     useEffect(() => {
         focusInput();
     }, [numbers, operators, focusInput]);
@@ -170,7 +176,16 @@ function MathGame({ config }) {
             </Box>
 
             {/* Math question + input + mark */}
-            <Box component="form" onSubmit={handleSubmit} mt={3}>
+            <Box
+                component="form"
+                onSubmit={handleSubmit}
+                mt={3}
+                sx={{
+                    opacity: fade ? 1 : 0,
+                    transform: fade ? 'scale(1)' : 'scale(0.98)',
+                    transition: 'opacity 250ms ease, transform 250ms ease',
+                }}
+            >
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
                     <Typography variant="h5">
                         <InlineMath math={latexExpression} />
@@ -179,12 +194,12 @@ function MathGame({ config }) {
                     <TextField
                         ref={inputRef}
                         type="tel"
-                        inputMode="numeric"             // Numeric keyboard on mobile
-                        pattern="[0-9]*"                // Restrict input to digits only
-                        autoComplete="off"              // Disable autofill
-                        autoCorrect="off"               // Disable autocorrect
-                        autoCapitalize="off"            // Disable autocapitalize
-                        spellCheck="false"              // Disable spell check
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
                         value={answer}
                         disabled={status === 'correct'}
                         onChange={(e) => setAnswer(e.target.value)}
@@ -219,7 +234,6 @@ function MathGame({ config }) {
                         Zatwierdź
                     </Button>
                 </Box>
-
             </Box>
         </Box>
     );
