@@ -6,27 +6,28 @@ import React, {
     useMemo,
 } from 'react';
 import TextField from '@mui/material/TextField';
-import { useNavigate } from 'react-router-dom';
-import { InlineMath } from 'react-katex';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import {useNavigate} from 'react-router-dom';
+import {InlineMath} from 'react-katex';
 import 'katex/dist/katex.min.css';
 import LevelProgressTracker from './LevelProgressTracker';
 
 /* ===================== Helpers ===================== */
-const generateLevelDescription = (config) => {
+const generateLevelDescription = (config, levelNumber) => {
     const {coefficients, operations, range} = config;
 
-    // Map operations to Polish text
     const operationNames = {
         '+': 'Dodawanie',
         '-': 'Odejmowanie',
-        '*': 'Mnożenie'
+        '*': 'Mnożenie',
     };
 
-    // Get unique operation names
     const uniqueOperations = [...new Set(operations)];
     const operationText = uniqueOperations.map(op => operationNames[op]).join(', ');
 
-    return `${operationText} w zakresie ${range}`;
+    return `Poziom ${levelNumber}: ${operationText} w zakresie ${range}`;
 };
 
 const calculateResult = (numbers, operators) =>
@@ -49,24 +50,25 @@ const buildLatexExpression = (numbers, operators) =>
 
 /* ===================== Component ===================== */
 
-function MathGame({ config }) {
+function MathGame({config}) {
     const {
-        coefficients = 2,
-        operations = ['+', '-'],
-        range = 20,
-    } = config || {};
+        level,
+        coefficients,
+        operations,
+        range,
+    } = config;
 
     const [numbers, setNumbers] = useState([]);
     const [operators, setOperators] = useState([]);
     const [answer, setAnswer] = useState('');
     const [status, setStatus] = useState('idle'); // idle | correct | wrong
+    const [inputBg, setInputBg] = useState('white'); // input background
 
     const inputRef = useRef(null);
     const progressRef = useRef(null);
     const navigate = useNavigate();
 
     /* ===================== Focus ===================== */
-
     const focusInput = useCallback(() => {
         const input = inputRef.current?.querySelector('input');
         input?.focus();
@@ -74,7 +76,6 @@ function MathGame({ config }) {
     }, []);
 
     /* ===================== Question Generation ===================== */
-
     const generateQuestion = useCallback(() => {
         let nums = [];
         let ops = [];
@@ -116,10 +117,10 @@ function MathGame({ config }) {
         setOperators(ops);
         setAnswer('');
         setStatus('idle');
+        setInputBg('white'); // reset input background
     }, [coefficients, operations, range]);
 
     /* ===================== Derived ===================== */
-
     const correctAnswer = useMemo(
         () => calculateResult(numbers, operators),
         [numbers, operators]
@@ -131,7 +132,6 @@ function MathGame({ config }) {
     );
 
     /* ===================== Handlers ===================== */
-
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!answer) return;
@@ -140,10 +140,12 @@ function MathGame({ config }) {
 
         if (userAnswer === correctAnswer) {
             setStatus('correct');
+            setInputBg('#d4edda'); // green for correct
             progressRef.current?.handleCorrectAnswer();
             setTimeout(generateQuestion, 800);
         } else {
             setStatus('wrong');
+            setInputBg('#f8d7da'); // red immediately
             progressRef.current?.handleIncorrectAnswer();
             focusInput();
         }
@@ -156,106 +158,124 @@ function MathGame({ config }) {
         else navigate('/games/math');
     };
 
-    /* ===================== Effects ===================== */
+    /* ===================== Fade red background effect ===================== */
+    useEffect(() => {
+        if (status !== 'idle') {
+            const timer = setTimeout(() => {
+                setInputBg('white'); // fade input back
+                setStatus('idle'); // reset status
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [status]);
+    ;
 
+    /* ===================== Effects ===================== */
     useEffect(generateQuestion, [generateQuestion]);
     useEffect(focusInput, [numbers, operators, focusInput]);
 
     /* ===================== Render ===================== */
-
     return (
-        <div style={{ textAlign: 'center', marginTop: 12 }}>
-            {/* ===================== Parent Info ===================== */}
-            <div
-                style={{
-                    fontSize: '0.85rem',
+        <Box display="flex" flexDirection="column" alignItems="center" mt={4} px={2}>
+
+            {/* Level Info */}
+            <Box
+                sx={{
+                    fontSize: '0.9rem',
                     fontStyle: 'italic',
                     color: '#555',
-                    marginBottom: '24px', // extra spacing to separate from game
-                    opacity: 0.8,
-                    padding: '6px 12px',
-                    borderRadius: 6,
-                    backgroundColor: '#f7f7f7', // subtle background
-                    display: 'inline-block', // shrink to content width
+                    mb: 3,
+                    p: 1.5,
+                    borderRadius: 2,
+                    bgcolor: '#f0f4f8',
+                    width: 'fit-content',
+                    marginBottom: 5,
                 }}
             >
-                {generateLevelDescription(config)}
-            </div>
+                {generateLevelDescription(config, level)}
+            </Box>
 
-            {/* ===================== Game & Progress Tracker ===================== */}
-            <LevelProgressTracker
-                ref={progressRef}
-                tasksToComplete={10}
-                maxMistakes={3}
-                onLevelRestart={generateQuestion}
-                onNextLevel={handleNextLevel}
+            {/* Progress Tracker outside question container */}
+            <Box
+                sx={{
+                    minWidth: 250,
+                    maxWidth: '90%',
+                }}
             >
-                <form onSubmit={handleSubmit} style={{ textAlign: 'center' }}>
-                    <div
-                        style={{
-                            fontSize: '1.2rem',
-                            marginBottom: 10,
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            gap: 8,
+                <LevelProgressTracker
+                    ref={progressRef}
+                    tasksToComplete={10}
+                    maxMistakes={3}
+                    onLevelRestart={generateQuestion}
+                    onNextLevel={handleNextLevel}
+                />
+            </Box>
+            {/* Math question + input + mark */}
+            <Box
+                component="form"
+                onSubmit={handleSubmit}
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+            >
+                {/* Question row */}
+                <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    gap={2}
+                    mb={2}
+                >
+                    <Typography variant="h5">
+                        <InlineMath math={latexExpression}/>
+                    </Typography>
+
+                    <TextField
+                        ref={inputRef}
+                        type="number"
+                        value={answer}
+                        disabled={status === 'correct'}
+                        onChange={(e) => setAnswer(e.target.value)}
+                        sx={{
+                            width: 70,
+                            '& .MuiOutlinedInput-root': {
+                                bgcolor: inputBg,
+                                transition: 'background-color 0.5s ease',
+                            },
                         }}
-                    >
-                        <InlineMath math={latexExpression} />
+                    />
+                </Box>
 
-                        <TextField
-                            ref={inputRef}
-                            type="number"
-                            value={answer}
-                            disabled={status === 'correct'}
-                            onChange={(e) => setAnswer(e.target.value)}
-                            sx={{
-                                width: 80,
-                                '& .MuiOutlinedInput-root': {
-                                    backgroundColor:
-                                        status === 'correct'
-                                            ? '#d4edda'
-                                            : status === 'wrong'
-                                                ? '#f8d7da'
-                                                : 'white',
-                                    transition: 'background-color 0.2s ease',
-                                },
-                            }}
-                        />
-
-                        <span
-                            style={{
-                                width: 28,
-                                textAlign: 'center',
-                                fontSize: '1.5rem',
-                            }}
-                        >
-                        {status === 'correct' && '✅'}
-                            {status === 'wrong' && '❌'}
-                    </span>
-                    </div>
-
-                    <button
+                <Box
+                    display="flex"
+                    justifyContent="center"
+                    position="relative" // parent must be relative for absolute positioning
+                    mt={1} // optional spacing from question row
+                >
+                    {/* Button */}
+                    <Button
                         type="submit"
+                        variant="contained"
                         disabled={status === 'correct' || !answer}
-                        style={{
-                            padding: '10px 20px',
+                        sx={{
+                            px: 4,
+                            py: 1.5,
                             fontSize: '1rem',
-                            backgroundColor:
-                                status === 'correct' ? '#9cc7a3' : '#007bff',
+                            bgcolor: status === 'correct' ? '#9cc7a3' : '#007bff',
+                            '&:hover': {
+                                bgcolor: status === 'correct' ? '#9cc7a3' : '#0056b3',
+                            },
                             color: 'white',
-                            border: 'none',
-                            borderRadius: '5px',
-                            cursor:
-                                status === 'correct' ? 'default' : 'pointer',
-                            opacity: status === 'correct' ? 0.8 : 1,
+                            borderRadius: 2,
+                            transition: 'all 0.2s ease',
                         }}
                     >
                         Zatwierdź
-                    </button>
-                </form>
-            </LevelProgressTracker>
-        </div>
+                    </Button>
+                </Box>
+
+            </Box>
+        </Box>
     );
 }
 

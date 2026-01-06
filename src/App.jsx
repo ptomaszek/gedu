@@ -45,7 +45,7 @@ const menuItems = [
             id: index + 1,
             text: `Poziom ${index + 1}`,
             path: `${gameConfig.math.path}/levels/${index + 1}`,
-            config: config
+            config: { ...config, level: index + 1 }
         }))
     },
     { text: 'Dummy', path: '/games/dummy' }
@@ -249,7 +249,7 @@ function AppContent() {
                     backgroundColor: '#f8f9fa'
                 }}
             >
-                <Toolbar />
+                <Box sx={{ height: 24 }} />  {/* Much smaller than Toolbar's default height */}
                 <Routes>
                     {generateRoutes()}
                     <Route

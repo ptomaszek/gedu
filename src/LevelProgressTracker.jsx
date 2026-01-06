@@ -9,6 +9,7 @@ import {
     LinearProgress,
     Box
 } from '@mui/material';
+import {Favorite} from '@mui/icons-material';
 
 /**
  * Reusable component for tracking level progress with configurable rules
@@ -92,29 +93,43 @@ const LevelProgressTracker = forwardRef(({
 
     return (
         <div style={{position: 'relative'}}>
-            {/* Progress indicator */}
-            <Box sx={{mb: 2}}>
-                <Typography variant="subtitle2" color="text.secondary">
-                    Postęp: {taskCount}/{tasksToComplete} zadań
-                </Typography>
-                <LinearProgress
-                    variant="determinate"
-                    value={progress}
-                    sx={{
-                        height: 8,
-                        borderRadius: 4,
-                        mt: 0.5,
-                        backgroundColor: '#e0e0e0',
-                        '& .MuiLinearProgress-bar': {
-                            backgroundColor: progress === 100 ? '#4caf50' : '#2196f3'
-                        }
-                    }}
-                />
-                <Typography variant="subtitle2" color={mistakesLeft <= 1 ? 'error.main' : 'text.secondary'}
-                            sx={{mt: 0.5}}>
-                    Szanse: {mistakesLeft}/{maxMistakes}
-                </Typography>
+            {/* Hearts (lives) */}
+            <Box sx={{ mb: 1, display: 'flex', gap: 0.5 }}>
+                {Array.from({ length: maxMistakes }).map((_, index) => {
+                    const isLost = index >= mistakesLeft; // past mistakes
+                    return (
+                        <Favorite
+                            key={index}
+                            sx={{
+                                fontSize: 18,
+                                color: isLost ? '#ccc' : '#f44336',
+                                transition: 'color 0.3s, opacity 0.3s',
+                                opacity: isLost ? 0.4 : 1,
+                                transform: isLost ? 'scale(0.8)' : 'scale(1)',
+                            }}
+                        />
+                    );
+                })}
             </Box>
+            {/* Chunked Progress Bar */}
+            <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                {Array.from({ length: tasksToComplete }).map((_, index) => {
+                    const isCompleted = index < taskCount;
+                    return (
+                        <Box
+                            key={index}
+                            sx={{
+                                flex: 1,           // each chunk takes equal space
+                                height: 12,
+                                borderRadius: 2,
+                                backgroundColor: isCompleted ? '#2196f3' : '#e0e0e0',
+                                transition: 'background-color 0.3s',
+                            }}
+                        />
+                    );
+                })}
+            </Box>
+
 
             {/* Child content - will be blocked by overlay when modal is shown */}
             <div style={{
@@ -166,7 +181,7 @@ const LevelProgressTracker = forwardRef(({
                 </DialogTitle>
                 <DialogContent>
                     <Typography id="success-modal-description" sx={{mt: 1}}>
-                        Ukończyłeś poziom!
+                        Poziom ukończony!
                     </Typography>
                 </DialogContent>
                 <DialogActions sx={{justifyContent: 'space-between'}}>
