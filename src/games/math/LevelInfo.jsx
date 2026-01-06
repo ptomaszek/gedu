@@ -20,7 +20,9 @@ const generateLevelDescription = (config, levelNumber) => {
     const uniqueOperations = [...new Set(operations)];
     const operationText = uniqueOperations.map(op => operationNames[op]).join(', ');
 
-    return `Poziom ${levelNumber}: ${operationText} w zakresie ${range}`;
+    let coefficientText = `${config.coefficients} ${config.coefficients <= 4 ? 'składniki' : 'składników'}`;
+    
+    return `Poziom ${levelNumber}: ${operationText}, ${coefficientText} w zakresie ${range}`;
 };
 
 /**
