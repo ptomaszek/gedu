@@ -16,11 +16,14 @@ describe('App (Landing Page)', () => {
       expect(screen.getByRole('main')).toBeInTheDocument();
     });
 
-    it('shows landing page heading without game list', () => {
+    it('shows landing page heading without expanded game list', () => {
       render(<App />);
       expect(screen.getByText('Wybierz grę z menu')).toBeInTheDocument();
-      // Verify that the game list is not shown on the landing page
-      expect(screen.queryByRole('list')).not.toBeInTheDocument();
+      // Verify that the game list is present but collapsed (no sub-items visible)
+      const list = screen.getByRole('list');
+      expect(list).toBeInTheDocument();
+      // Verify that sub-items are not visible initially (collapsed state)
+      expect(screen.queryByRole('link', { name: 'Poziom 1' })).not.toBeInTheDocument();
     });
 
     it('shows menu items and expands sub-items', async () => {
@@ -28,7 +31,7 @@ describe('App (Landing Page)', () => {
       
       // Expect the main "Matematyka" button to be present.
       // Since there are two instances (drawer and main content), use getAllByRole.
-      const mathGameButtons = screen.getAllByRole('button', { name: 'Matematyka ▲' });
+      const mathGameButtons = screen.getAllByRole('button', { name: 'Matematyka ▼' });
       expect(mathGameButtons.length).toBeGreaterThanOrEqual(1); // Ensure at least one button is found
       
       // Click the first found button to expand sub-items

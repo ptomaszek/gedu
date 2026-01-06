@@ -38,12 +38,19 @@ const menuItems = [
     {
         text: gameConfig.math.title,
         path: gameConfig.math.path,
-        subitems: gameConfig.math.levels.map((config, index) => ({
-            id: index + 1,
-            text: `Poziom ${index + 1}`,
-            path: `${gameConfig.math.path}/levels/${index + 1}`,
-            config: { ...config, level: index + 1 }
-        }))
+        subitems: [
+            {
+                id: 'level-info',
+                text: 'Opis poziomów',
+                path: gameConfig.math.path
+            },
+            ...gameConfig.math.levels.map((config, index) => ({
+                id: index + 1,
+                text: `Poziom ${index + 1}`,
+                path: `${gameConfig.math.path}/levels/${index + 1}`,
+                config: { ...config, level: index + 1 }
+            }))
+        ]
     },
     { text: 'Dummy', path: '/games/dummy' }
 ];
@@ -51,7 +58,7 @@ const menuItems = [
 const MenuItem = ({ item, depth = 0, onItemClick, activePath }) => {
     const theme = useTheme();
     const navigate = useNavigate();
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
     const hasSubitems = item.subitems && item.subitems.length > 0;
     const isActive = activePath === item.path;
 
@@ -82,7 +89,7 @@ const MenuItem = ({ item, depth = 0, onItemClick, activePath }) => {
                     <ListItemText
                         primary={item.text}
                         primaryTypographyProps={{
-                            fontSize: depth > 0 ? '0.875rem' : '1rem',
+                            fontSize: item.id === 'level-info' ? '0.8rem' : (depth > 0 ? '0.875rem' : '1rem'),
                             fontWeight: hasSubitems ? 'bold' : 'normal'
                         }}
                     />
@@ -155,12 +162,16 @@ function AppContent() {
                             />
                         );
                     } else {
-                        // Generic subitem route
+                        // Generic subitem route - for "Opis poziomów" we don't want to render MathGame
+                        if (subitem.id === 'level-info') {
+                            // This will be handled by the explicit /games/math route below
+                            return;
+                        }
                         routes.push(
                             <Route
                                 key={subitem.path}
                                 path={subitem.path}
-                                element={subitem.element || <MathGame config={subitem.config} />} // Fallback to MathGame if no element
+                                element={subitem.element || (subitem.config ? <MathGame config={subitem.config} /> : undefined)} // Only pass config if it exists
                             />
                         );
                     }
@@ -261,10 +272,12 @@ function AppContent() {
                     />
                     <Route path="/games/math" element={
                         <Container maxWidth="lg">
-                            <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                                Wybierz poziom gry matematycznej:
+                            <Typography variant="h6" gutterBottom sx={{ mt: 4, mb: 2 }}>
+                                Poziomy:
                             </Typography>
-                            <MenuList activePath={location.pathname} />
+                            <Typography variant="body1">
+                                 TODO list with descriptions
+                            </Typography>
                         </Container>
                     } />
                 </Routes>
