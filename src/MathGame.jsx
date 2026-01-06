@@ -190,6 +190,7 @@ function MathGame({ config }) {
             {/* Progress Tracker outside question container */}
             <Box sx={{ minWidth: 250, maxWidth: '90%' }}>
                 <LevelProgressTracker
+                    key={`level-${level}`} // Force remount when level changes
                     ref={progressRef}
                     tasksToComplete={10}
                     maxMistakes={3}

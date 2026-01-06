@@ -79,6 +79,11 @@ const LevelProgressTracker = forwardRef(({
         }
     };
 
+    // Reset progress when component mounts (level change)
+    useEffect(() => {
+        resetLevel();
+    }, []);
+
     // Expose methods to parent component via ref
     useImperativeHandle(ref, () => ({
         handleCorrectAnswer,
