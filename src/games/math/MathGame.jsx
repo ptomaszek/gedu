@@ -33,7 +33,7 @@ function MathGame({ config }) {
             <LevelInfo config={config} level={level} />
 
             {/* Progress Tracker */}
-            <Box sx={{ minWidth: 250 }}>
+            <Box sx={{ minWidth: 250, maxWidth: '90%' }}>
                 <LevelProgressTracker
                     key={`level-${level}`} // force remount on level change
                     ref={progressRef}

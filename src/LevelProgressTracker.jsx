@@ -9,6 +9,8 @@ import {
     Box,
     Fade
 } from '@mui/material';
+import Confetti from 'react-confetti';
+import { useWindowSize } from 'react-use';
 
 /**
  * Reusable component for tracking level progress with configurable rules
@@ -36,9 +38,11 @@ const LevelProgressTracker = forwardRef(({
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isLevelActive, setIsLevelActive] = useState(true);
 
-    // Delayed open states for fade-in effect
     const [delayedFailureOpen, setDelayedFailureOpen] = useState(false);
     const [delayedSuccessOpen, setDelayedSuccessOpen] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
+
+    const { width, height } = useWindowSize();
 
     // Reset level state
     const resetLevel = () => {
@@ -79,19 +83,19 @@ const LevelProgressTracker = forwardRef(({
         }
     };
 
-    // Reset progress when component mounts (level change)
+    // Reset progress on mount
     useEffect(() => {
         resetLevel();
     }, []);
 
-    // Expose methods to parent component via ref
+    // Expose methods via ref
     useImperativeHandle(ref, () => ({
         handleCorrectAnswer,
         handleIncorrectAnswer,
         resetLevel
-    }), [handleCorrectAnswer, handleIncorrectAnswer, resetLevel]);
+    }));
 
-    // Delay failure modal opening
+    // Delay failure modal
     useEffect(() => {
         let timer;
         if (showFailureModal) {
@@ -102,22 +106,42 @@ const LevelProgressTracker = forwardRef(({
         return () => clearTimeout(timer);
     }, [showFailureModal]);
 
-    // Delay success modal opening
+    // Delay success modal and show confetti
     useEffect(() => {
-        let timer;
+        let timer, confettiTimer;
         if (showSuccessModal) {
-            timer = setTimeout(() => setDelayedSuccessOpen(true), 500);
+            setDelayedSuccessOpen(false); // reset
+            timer = setTimeout(() => {
+                setDelayedSuccessOpen(true);
+                setShowConfetti(true);
+            }, 500);
+
+            confettiTimer = setTimeout(() => setShowConfetti(false), 5500);
         } else {
             setDelayedSuccessOpen(false);
+            setShowConfetti(false);
         }
-        return () => clearTimeout(timer);
+
+        return () => {
+            clearTimeout(timer);
+            clearTimeout(confettiTimer);
+        };
     }, [showSuccessModal]);
 
-    // Progress calculation
     const mistakesLeft = Math.max(0, maxMistakes - mistakeCount);
 
     return (
         <div style={{ position: 'relative' }}>
+            {showConfetti && (
+                <Confetti
+                    width={width}
+                    height={height}
+                    recycle={false}
+                    numberOfPieces={300}
+                    gravity={0.2}
+                />
+            )}
+
             {/* Hearts (lives) */}
             <Box sx={{ mb: 4, display: 'flex', gap: 0.5 }}>
                 {Array.from({ length: maxMistakes }).map((_, index) => {
@@ -160,7 +184,7 @@ const LevelProgressTracker = forwardRef(({
                 })}
             </Box>
 
-            {/* Child content - blocked when modal is visible */}
+            {/* Child content */}
             <div style={{
                 position: 'relative',
                 opacity: showFailureModal || showSuccessModal ? 0.3 : 1,
@@ -182,28 +206,19 @@ const LevelProgressTracker = forwardRef(({
             >
                 <DialogTitle
                     id="failure-modal-title"
-                    sx={{
-                        color: 'error.main',
-                        fontWeight: 'bold',  // Standardized font weight for both titles
-                        textAlign: 'center' // Consistent title alignment
-                    }}
+                    sx={{ color: 'error.main', fontWeight: 'bold', textAlign: 'center' }}
                 >
                     Koniec gry
                 </DialogTitle>
                 <DialogContent>
                     <Typography
                         id="failure-modal-description"
-                        sx={{
-                            mt: 1,
-                            textAlign: 'center', // Make sure the description is centered
-                            fontSize: '1rem', // Same font size for both dialogs
-                            color: 'text.primary' // Standard text color for both dialogs
-                        }}
+                        sx={{ mt: 1, textAlign: 'center', fontSize: '1rem', color: 'text.primary' }}
                     >
                         Zacznij jeszcze raz 🍀
                     </Typography>
                 </DialogContent>
-                <DialogActions sx={{ justifyContent: 'center' }}>  {/* Center buttons for uniformity */}
+                <DialogActions sx={{ justifyContent: 'center' }}>
                     <Button
                         onClick={resetLevel}
                         variant="contained"
@@ -222,6 +237,7 @@ const LevelProgressTracker = forwardRef(({
                 onClose={() => {}}
                 TransitionComponent={Fade}
                 transitionDuration={500}
+                disableScrollLock
                 fullWidth
                 sx={{ '& .MuiDialog-paper': { maxWidth: '300px' } }}
                 aria-labelledby="success-modal-title"
@@ -229,23 +245,14 @@ const LevelProgressTracker = forwardRef(({
             >
                 <DialogTitle
                     id="success-modal-title"
-                    sx={{
-                        color: 'success.main',
-                        fontWeight: 'bold',  // Standardized font weight
-                        textAlign: 'center' // Consistent title alignment
-                    }}
+                    sx={{ color: 'success.main', fontWeight: 'bold', textAlign: 'center' }}
                 >
                     Brawo! 🎉
                 </DialogTitle>
                 <DialogContent>
                     <Typography
                         id="success-modal-description"
-                        sx={{
-                            mt: 1,
-                            textAlign: 'center', // Center the description
-                            fontSize: '1rem', // Same font size as the failure modal
-                            color: 'text.primary' // Standard text color
-                        }}
+                        sx={{ mt: 1, textAlign: 'center', fontSize: '1rem', color: 'text.primary' }}
                     >
                         Poziom ukończony!
                     </Typography>
@@ -255,7 +262,7 @@ const LevelProgressTracker = forwardRef(({
                         onClick={resetLevel}
                         variant="outlined"
                         color="primary"
-                        sx={{ width: '45%', marginRight: '5%', fontSize: '1.0rem', textTransform: 'none' }}
+                        sx={{ width: '45%', marginRight: '5%', fontSize: '1rem', textTransform: 'none' }}
                     >
                         Powtarzam
                     </Button>
