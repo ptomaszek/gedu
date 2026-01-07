@@ -85,44 +85,46 @@ function MathQuestion({ config, progressRef }) {
 
     /* ===================== Render ===================== */
     return (
-        <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{
-                opacity: fade ? 1 : 0,
-                transform: fade ? 'scale(1)' : 'scale(0.98)',
-                transition: 'opacity 250ms ease, transform 250ms ease',
-                mt: 3,
-            }}
-        >
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
-                <Typography variant="h5">
-                    <KaTeXComponents math={latexExpression} />
-                </Typography>
+        <Box component="form" onSubmit={handleSubmit}>
+            {/* Question content that fades during transitions */}
+            <Box
+                sx={{
+                    opacity: fade ? 1 : 0,
+                    transform: fade ? 'scale(1)' : 'scale(0.98)',
+                    transition: 'opacity 250ms ease, transform 250ms ease',
+                    mt: 3,
+                }}
+            >
+                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                    <Typography variant="h5">
+                        <KaTeXComponents math={latexExpression} />
+                    </Typography>
 
-                <TextField
-                    ref={inputRef}
-                    type="tel"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    value={answer}
-                    disabled={status === 'correct'}
-                    onChange={(e) => setAnswer(e.target.value)}
-                    sx={{
-                        width: 70,
-                        '& .MuiOutlinedInput-root': {
-                            bgcolor: inputBg,
-                            transition: 'background-color 0.5s ease',
-                        },
-                    }}
-                />
+                    <TextField
+                        ref={inputRef}
+                        type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        value={answer}
+                        disabled={status === 'correct'}
+                        onChange={(e) => setAnswer(e.target.value)}
+                        sx={{
+                            width: 70,
+                            '& .MuiOutlinedInput-root': {
+                                bgcolor: inputBg,
+                                transition: 'background-color 0.5s ease',
+                            },
+                        }}
+                    />
+                </Box>
             </Box>
 
-            <Box display="flex" justifyContent="center">
+            {/* Submit button that remains stable during transitions */}
+            <Box display="flex" justifyContent="center" mt={2}>
                 <Button
                     type="submit"
                     variant="contained"
