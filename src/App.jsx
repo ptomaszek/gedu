@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
     AppBar,
     Box,
@@ -23,6 +23,7 @@ import {
     useLocation
 } from 'react-router-dom';
 import MathGame from './games/math/MathGame';
+import ClockGame from './games/clock/ClockGame';
 
 
 const gameConfig = {
@@ -30,12 +31,18 @@ const gameConfig = {
         title: 'Matematyka',
         path: '/games/math',
         levels: [
-            { coefficients: 2, operations: ['+', '-'], range: 10 },
-            { coefficients: 2, operations: ['+', '-'], range: 20 },
-            { coefficients: 3, operations: ['+', '-'], range: 10 },
-            { coefficients: 3, operations: ['+', '-'], range: 20 },
-            { coefficients: 2, operations: ['*'], range: 10 }
+            {coefficients: 2, operations: ['+', '-'], range: 10},
+            {coefficients: 2, operations: ['+', '-'], range: 20},
+            {coefficients: 3, operations: ['+', '-'], range: 10},
+            {coefficients: 3, operations: ['+', '-'], range: 20},
+            {coefficients: 2, operations: ['*'], range: 10}
         ]
+    },
+
+    clock: {
+        title: 'Zegar',
+        path: '/games/clock',
+        levels: [{}, {}, {}] // empty configs for now
     }
 };
 
@@ -43,44 +50,38 @@ const gameConfig = {
    MENU
    ========================= */
 
-function MathMenu({ activePath, onItemClick }) {
-    const theme = useTheme();
+function GameMenu({game, activePath, onItemClick}) {
     const [open, setOpen] = useState(true);
 
     return (
         <>
             <ListItem disablePadding>
-                <ListItemButton
-                    onClick={() => setOpen(o => !o)}
-                    sx={{ fontWeight: 'bold' }}
-                >
-                    <ListItemText primary={gameConfig.math.title} />
+                <ListItemButton onClick={() => setOpen(o => !o)}>
+                    <ListItemText primary={game.title}/>
                     {open ? '▲' : '▼'}
                 </ListItemButton>
             </ListItem>
 
             <Collapse in={open} timeout="auto" unmountOnExit>
                 <List disablePadding>
-                    {/* Level description */}
                     <ListItem disablePadding>
                         <ListItemButton
                             component={RouterLink}
-                            to={gameConfig.math.path}
-                            selected={activePath === gameConfig.math.path}
+                            to={game.path}
+                            selected={activePath === game.path}
                             onClick={onItemClick}
-                            sx={{ pl: 4 }}
+                            sx={{pl: 4}}
                         >
                             <ListItemText
                                 primary="Opis poziomów"
-                                primaryTypographyProps={{ fontSize: '0.8rem' }}
+                                primaryTypographyProps={{fontSize: '0.8rem'}}
                             />
                         </ListItemButton>
                     </ListItem>
 
-                    {/* Levels */}
-                    {gameConfig.math.levels.map((config, index) => {
+                    {game.levels.map((_, index) => {
                         const level = index + 1;
-                        const path = `${gameConfig.math.path}/levels/${level}`;
+                        const path = `${game.path}/levels/${level}`;
 
                         return (
                             <ListItem key={level} disablePadding>
@@ -89,9 +90,9 @@ function MathMenu({ activePath, onItemClick }) {
                                     to={path}
                                     selected={activePath === path}
                                     onClick={onItemClick}
-                                    sx={{ pl: 4 }}
+                                    sx={{pl: 4}}
                                 >
-                                    <ListItemText primary={`Poziom ${level}`} />
+                                    <ListItemText primary={`Poziom ${level}`}/>
                                 </ListItemButton>
                             </ListItem>
                         );
@@ -102,26 +103,22 @@ function MathMenu({ activePath, onItemClick }) {
     );
 }
 
-function MenuList({ onItemClick }) {
+function MenuList({onItemClick}) {
     const location = useLocation();
 
     return (
         <List>
-            <MathMenu
+            <GameMenu
+                game={gameConfig.math}
                 activePath={location.pathname}
                 onItemClick={onItemClick}
             />
 
-            <ListItem disablePadding>
-                <ListItemButton
-                    component={RouterLink}
-                    to="/games/dummy"
-                    selected={location.pathname === '/games/dummy'}
-                    onClick={onItemClick}
-                >
-                    <ListItemText primary="Dummy" />
-                </ListItemButton>
-            </ListItem>
+            <GameMenu
+                game={gameConfig.clock}
+                activePath={location.pathname}
+                onItemClick={onItemClick}
+            />
         </List>
     );
 }
@@ -138,24 +135,24 @@ function AppContent() {
     };
 
     const drawer = (
-        <Box sx={{ width: 240 }}>
-            <Toolbar />
-            <MenuList onItemClick={handleDrawerToggle} />
+        <Box sx={{width: 240}}>
+            <Toolbar/>
+            <MenuList onItemClick={handleDrawerToggle}/>
         </Box>
     );
 
     return (
-        <Box sx={{ display: 'flex' }}>
-            <CssBaseline />
+        <Box sx={{display: 'flex'}}>
+            <CssBaseline/>
 
             {/* APP BAR */}
-            <AppBar position="fixed" sx={{ zIndex: theme => theme.zIndex.drawer + 1 }}>
+            <AppBar position="fixed" sx={{zIndex: theme => theme.zIndex.drawer + 1}}>
                 <Toolbar>
                     <IconButton
                         color="inherit"
                         edge="start"
                         onClick={handleDrawerToggle}
-                        sx={{ mr: 2, display: { md: 'none' } }}
+                        sx={{mr: 2, display: {md: 'none'}}}
                     >
                         ☰
                     </IconButton>
@@ -164,7 +161,7 @@ function AppContent() {
                         component={RouterLink}
                         to="/"
                         color="inherit"
-                        sx={{ textDecoration: 'none' }}
+                        sx={{textDecoration: 'none'}}
                     >
                         Gry dla XY
                     </Typography>
@@ -172,15 +169,15 @@ function AppContent() {
             </AppBar>
 
             {/* DRAWERS */}
-            <Box component="nav" sx={{ width: { md: 240 }, flexShrink: { md: 0 } }}>
+            <Box component="nav" sx={{width: {md: 240}, flexShrink: {md: 0}}}>
                 <Drawer
                     variant="temporary"
                     open={mobileOpen}
                     onClose={handleDrawerToggle}
-                    ModalProps={{ keepMounted: true }}
+                    ModalProps={{keepMounted: true}}
                     sx={{
-                        display: { xs: 'block', md: 'none' },
-                        '& .MuiDrawer-paper': { width: 240 }
+                        display: {xs: 'block', md: 'none'},
+                        '& .MuiDrawer-paper': {width: 240}
                     }}
                 >
                     {drawer}
@@ -189,8 +186,8 @@ function AppContent() {
                 <Drawer
                     variant="permanent"
                     sx={{
-                        display: { xs: 'none', md: 'block' },
-                        '& .MuiDrawer-paper': { width: 240 }
+                        display: {xs: 'none', md: 'block'},
+                        '& .MuiDrawer-paper': {width: 240}
                     }}
                     open
                 >
@@ -204,11 +201,11 @@ function AppContent() {
                 sx={{
                     flexGrow: 1,
                     p: 1,
-                    width: { md: 'calc(100% - 240px)' },
+                    width: {md: 'calc(100% - 240px)'},
                     backgroundColor: '#f8f9fa'
                 }}
             >
-                <Box sx={{ height: 24 }} />
+                <Box sx={{height: 24}}/>
 
                 <Routes>
                     <Route
@@ -238,21 +235,17 @@ function AppContent() {
                         <Route
                             key={index}
                             path={`${gameConfig.math.path}/levels/${index + 1}`}
-                            element={
-                                <MathGame config={{ ...config, level: index + 1 }} />
-                            }
+                            element={<MathGame config={{ ...config, level: index + 1 }} />}
                         />
                     ))}
 
-                    <Route
-                        path="/games/dummy"
-                        element={
-                            <Container maxWidth="lg">
-                                <Typography variant="h4">Strona Dummy</Typography>
-                                <Typography>To jest treść strony Dummy.</Typography>
-                            </Container>
-                        }
-                    />
+                    {gameConfig.clock.levels.map((config, index) => (
+                        <Route
+                            key={index}
+                            path={`${gameConfig.clock.path}/levels/${index + 1}`}
+                            element={<ClockGame config={config} />}
+                        />
+                    ))}
                 </Routes>
             </Box>
         </Box>
@@ -262,9 +255,9 @@ function AppContent() {
 export default function App() {
     return (
         <Router>
-            <AppContent />
+            <AppContent/>
         </Router>
     );
 }
 
-export { AppContent };
+export {AppContent};
