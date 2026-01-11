@@ -4,7 +4,7 @@ import Clock from 'react-clock';
 import 'react-clock/dist/Clock.css';
 import Keyboard from 'react-simple-keyboard';
 import 'react-simple-keyboard/build/css/index.css';
-import TimeInput2 from './TimeInput2';
+import TimeInput2 from './TimeInput2.jsx';
 
 function ClockGame2({ config, progressRef }) {
     const [answer, setAnswer] = useState('00:00');

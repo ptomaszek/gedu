@@ -1,6 +1,6 @@
 import {render, screen, fireEvent, act} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import TimeInput2 from '../games/clock2/TimeInput2';
+import TimeInput2 from '../TimeInput2';
 import React from 'react';
 import {vi} from 'vitest';
 

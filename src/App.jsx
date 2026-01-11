@@ -24,10 +24,9 @@ import {
 } from 'react-router-dom';
 import MathGame from './games/math/MathGame';
 import ClockGame from './games/clock/ClockGame';
-import ClockGame2 from './games/clock2/ClockGame2';
+import ClockGame2 from './games/clock/ClockGame2';
 import LevelProgressTracker from './LevelProgressTracker';
 import LevelInfo from './games/clock/LevelInfo';
-import LevelInfo2 from './games/clock2/LevelInfo2';
 
 
 const gameConfig = {

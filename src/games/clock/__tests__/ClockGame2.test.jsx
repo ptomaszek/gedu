@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import ClockGame2 from '../games/clock2/ClockGame2';
+import ClockGame2 from '../ClockGame2';
 import React from 'react';
 import { vi } from 'vitest';
 
