@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 
 const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mode = 'full-time' }, ref) => {
     const isHoursOnly = mode === 'hours-only';
 
     // Parse initial value into hours and minutes
-    const parseTime = (timeString) => {
+    const parseTime = useCallback((timeString) => {
         if (isHoursOnly) {
             const hours = timeString || '00';
             return {
@@ -17,7 +17,7 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
             hours: hours.padStart(2, '0'),
             minutes: minutes.padStart(2, '0')
         };
-    };
+    }, [isHoursOnly]);
 
     const initialTime = parseTime(value);
 
@@ -32,17 +32,17 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
     const containerRef = useRef(null);
 
     // Format the final value to send to parent
-    const formatValue = (hours, minutes) => {
+    const formatValue = useCallback((hours, minutes) => {
         return isHoursOnly ? hours : `${hours}:${minutes}`;
-    };
+    }, [isHoursOnly]);
 
     // Notify parent of value change
-    const notifyChange = (hours, minutes) => {
+    const notifyChange = useCallback((hours, minutes) => {
         onChange(formatValue(hours, minutes));
-    };
+    }, [onChange, formatValue]);
 
     // Handle digit input for hours
-    const handleHoursDigit = (digit) => {
+    const handleHoursDigit = useCallback((digit) => {
         // If buffer is empty but we already have a committed value, ignore input
         // (this means we've already entered 2 digits and auto-committed)
         if (hoursBuffer === '' && committedHours !== '00') {
@@ -69,10 +69,10 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
                 setActiveSection('minutes');
             }
         }
-    };
+    }, [hoursBuffer, committedHours, committedMinutes, isHoursOnly, notifyChange]);
 
     // Handle digit input for minutes (full-time only)
-    const handleMinutesDigit = (digit) => {
+    const handleMinutesDigit = useCallback((digit) => {
         // If buffer is empty but we already have a committed value, ignore input
         // (this means we've already entered 2 digits and auto-committed)
         if (minutesBuffer === '' && committedMinutes !== '00') {
@@ -94,10 +94,10 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
             setMinutesBuffer('');
             notifyChange(committedHours, newBuffer);
         }
-    };
+    }, [minutesBuffer, committedMinutes, committedHours, notifyChange]);
 
     // Handle digit input
-    const handleDigitInput = (digit) => {
+    const handleDigitInput = useCallback((digit) => {
         if (disabled) return;
         setUserHasInteracted(true);
 
@@ -106,10 +106,10 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
         } else if (!isHoursOnly) {
             handleMinutesDigit(digit);
         }
-    };
+    }, [disabled, activeSection, isHoursOnly, handleHoursDigit, handleMinutesDigit]);
 
     // Handle backspace
-    const handleBackspaceAction = () => {
+    const handleBackspaceAction = useCallback(() => {
         if (disabled) return;
 
         if (activeSection === 'hours') {
@@ -141,10 +141,10 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
                 setActiveSection('hours');
             }
         }
-    };
+    }, [disabled, activeSection, hoursBuffer, committedHours, committedMinutes, minutesBuffer, isHoursOnly, notifyChange]);
 
     // Switch active section
-    const switchSection = (section) => {
+    const switchSection = useCallback((section) => {
         if (disabled || isHoursOnly) return;
 
         // Commit current buffer before switching
@@ -161,10 +161,10 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
         }
 
         setActiveSection(section);
-    };
+    }, [disabled, isHoursOnly, activeSection, hoursBuffer, minutesBuffer, committedHours, committedMinutes, notifyChange]);
 
     // Get final values (committing any pending buffers)
-    const getFinalValues = () => {
+    const getFinalValues = useCallback(() => {
         let finalHours = committedHours;
         let finalMinutes = committedMinutes;
 
@@ -176,7 +176,7 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
         }
 
         return { finalHours, finalMinutes };
-    };
+    }, [committedHours, committedMinutes, hoursBuffer, minutesBuffer, isHoursOnly]);
 
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
@@ -206,16 +206,18 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
 
             return finalValue;
         }
-    }));
+    }), [handleDigitInput, handleBackspaceAction, getFinalValues, formatValue, onChange, onSubmit]);
 
     // Handle keyboard navigation
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (disabled) return;
 
-            if (!containerRef.current?.contains(document.activeElement) &&
-                e.target !== document.body &&
-                e.target !== containerRef.current) {
+            // Check if this is our container or if we should handle global keys
+            const isOurContainer = containerRef.current?.contains(document.activeElement);
+            const isGlobalContext = e.target === document.body || e.target === document;
+
+            if (!isOurContainer && !isGlobalContext) {
                 return;
             }
 
@@ -248,7 +250,7 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [disabled, activeSection, hoursBuffer, minutesBuffer, committedHours, committedMinutes, onSubmit, isHoursOnly]);
+    }, [disabled, isHoursOnly, handleDigitInput, handleBackspaceAction, switchSection, onSubmit, getFinalValues, formatValue, onChange]);
 
     // Update when value prop changes from parent
     // Only sync if we don't have active buffers (to avoid overwriting user input)
@@ -259,16 +261,20 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
         }
 
         const newTime = parseTime(value);
-        setCommittedHours(newTime.hours);
-        setCommittedMinutes(newTime.minutes);
 
-        // Reset to initial state when value is reset to default
-        const isDefaultValue = newTime.hours === '00' && newTime.minutes === '00';
-        if (isDefaultValue) {
-            setActiveSection('hours');
-            setUserHasInteracted(false);
+        // Only update if the value actually changed
+        if (newTime.hours !== committedHours || newTime.minutes !== committedMinutes) {
+            setCommittedHours(newTime.hours);
+            setCommittedMinutes(newTime.minutes);
+
+            // Reset to initial state when value is reset to default
+            const isDefaultValue = newTime.hours === '00' && newTime.minutes === '00';
+            if (isDefaultValue) {
+                setActiveSection('hours');
+                setUserHasInteracted(false);
+            }
         }
-    }, [value, isHoursOnly, hoursBuffer, minutesBuffer]);
+    }, [value, parseTime, hoursBuffer, minutesBuffer, committedHours, committedMinutes]);
 
     // Auto-focus on mount
     useEffect(() => {

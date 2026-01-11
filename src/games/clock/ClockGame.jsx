@@ -40,7 +40,7 @@ function ClockGame({ config, progressRef }) {
     };
 
     // Function to handle answer submission
-    const handleSubmit = () => {
+    const handleSubmit = useCallback(() => {
         if (!answer || status === 'correct') return;
 
         const currentHour = currentTime.getHours();
@@ -66,7 +66,7 @@ function ClockGame({ config, progressRef }) {
             progressRef.current?.handleIncorrectAnswer();
             focusAndSelectInput();
         }
-    };
+    }, [answer, status, currentTime, progressRef, focusAndSelectInput]);
 
     const getValidAnswersForHour = (hour) => {
         const answers = [];
@@ -129,30 +129,20 @@ function ClockGame({ config, progressRef }) {
     useEffect(() => {
         randomizeClock();
         focusAndSelectInput();
-    }, []);
+    }, [focusAndSelectInput]);
 
     // Keep onscreen keyboard in sync
     useEffect(() => {
         keyboardRef.current?.setInput(answer);
     }, [answer]);
 
-    // Physical keyboard support - only for direct input, not virtual keyboard
+    // Physical keyboard support - only handle Enter key
+    // TimeInput handles digits and backspace internally
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (status === 'correct') return;
 
-            if (e.key >= '0' && e.key <= '9') {
-                e.preventDefault();
-                // For physical keyboard, we'll let TimeInput handle it through its own keydown handler
-                // But if we need direct input, we can call the ref method
-                inputRef.current?.handleDigit(e.key);
-            }
-
-            if (e.key === 'Backspace') {
-                e.preventDefault();
-                inputRef.current?.handleBackspace();
-            }
-
+            // Only handle Enter - let TimeInput handle digits and backspace
             if (e.key === 'Enter') {
                 e.preventDefault();
                 const finalValue = inputRef.current?.commitAndSubmit();
