@@ -139,7 +139,7 @@ function ClockGame2({ config, progressRef }) {
                     mt: 3,
                 }}
             >
-                <Box display="flex" justifyContent="center" gap={3} mb={2}>
+                <Box display="flex" alignItems="center" justifyContent="center" gap={3} mb={2}>
                     <Clock
                         value={currentTime}
                         size={150}

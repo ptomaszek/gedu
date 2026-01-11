@@ -310,8 +310,8 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
             tabIndex={disabled ? -1 : 0}
             className={`time-input ${status === 'correct' ? 'status-correct' : ''} ${status === 'wrong' ? 'status-wrong' : ''}`}
             sx={{
-                width: 130,
-                height: 'fit-content',
+                width: 100,
+                height: 48,
                 bgcolor: getBackgroundColor(),
                 borderRadius: 1,
                 border: '1px solid #ccc',
@@ -319,7 +319,7 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
                 display: 'flex',
                 alignItems: 'center',
                 fontFamily: 'monospace',
-                fontSize: '1.5rem',
+                fontSize: '1.2rem',
                 userSelect: 'none',
                 cursor: disabled ? 'not-allowed' : 'text',
                 opacity: disabled ? 0.6 : 1,
@@ -342,8 +342,8 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
                 sx={{
                     flex: 1,
                     textAlign: 'right',
-                    py: 0.5,
-                    px: 1,
+                    py: 0.25,
+                    px: 0.5,
                     bgcolor: activeSection === 'hours' ? getActiveSectionColor() : 'transparent',
                     borderRadius: 1,
                     transition: 'background-color 0.2s ease',
@@ -357,8 +357,10 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
                 <Typography
                     component="span"
                     sx={{
-                        fontWeight: activeSection === 'hours' ? 'bold' : 'normal',
+                        fontWeight: 'bold',
                         color: disabled ? '#666' : '#000',
+                        fontFamily: 'monospace',
+                        letterSpacing: '0',
                     }}
                 >
                     {getHoursDisplay()}
@@ -388,8 +390,8 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
                 sx={{
                     flex: 1,
                     textAlign: 'left',
-                    py: 0.5,
-                    px: 1,
+                    py: 0.25,
+                    px: 0.5,
                     bgcolor: activeSection === 'minutes' ? getActiveSectionColor() : 'transparent',
                     borderRadius: 1,
                     transition: 'background-color 0.2s ease',
@@ -402,8 +404,10 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
                 <Typography
                     component="span"
                     sx={{
-                        fontWeight: activeSection === 'minutes' ? 'bold' : 'normal',
+                        fontWeight: 'bold',
                         color: disabled ? '#666' : '#000',
+                        fontFamily: 'monospace',
+                        letterSpacing: '0',
                     }}
                 >
                     {getMinutesDisplay()}
