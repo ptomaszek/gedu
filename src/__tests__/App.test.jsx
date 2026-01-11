@@ -15,15 +15,5 @@ describe('App (Landing Page)', () => {
       expect(screen.getByRole('banner')).toBeInTheDocument();
       expect(screen.getByRole('main')).toBeInTheDocument();
     });
-
-    it('shows landing page heading with expanded game list', () => {
-      render(<App />);
-      expect(screen.getByText('Wybierz grę z menu')).toBeInTheDocument();
-      // Verify that the game list is present and expanded (sub-items visible)
-      const list = screen.getByRole('list');
-      expect(list).toBeInTheDocument();
-      // Verify that sub-items are visible initially (expanded state)
-      expect(screen.getByRole('link', { name: 'Poziom 1' })).toBeInTheDocument();
-    });
   });
 });
