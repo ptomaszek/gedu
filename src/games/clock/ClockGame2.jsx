@@ -4,7 +4,7 @@ import Clock from 'react-clock';
 import 'react-clock/dist/Clock.css';
 import Keyboard from 'react-simple-keyboard';
 import 'react-simple-keyboard/build/css/index.css';
-import TimeInput2 from './TimeInput2.jsx';
+import TimeInput from './TimeInput.jsx';
 import StyledClock from './StyledClock';
 
 function ClockGame2({ config, progressRef }) {
@@ -93,7 +93,7 @@ function ClockGame2({ config, progressRef }) {
         }
     };
 
-    // Handle TimeInput2 onChange events
+    // Handle TimeInput onChange events
     const handleTimeInputChange = (newValue) => {
         setAnswer(newValue);
     };
@@ -103,14 +103,14 @@ function ClockGame2({ config, progressRef }) {
         if (status === 'correct') return;
 
         if (button === '{enter}') {
-            // Get the committed value from TimeInput2 (with buffers committed and padded)
+            // Get the committed value from TimeInput (with buffers committed and padded)
             const finalValue = timeInputRef.current?.commitAndSubmit();
             handleSubmit(finalValue);
         } else if (button === '{bksp}') {
-            // Forward backspace to TimeInput2
+            // Forward backspace to TimeInput
             timeInputRef.current?.handleBackspace();
         } else if (/^[0-9]$/.test(button)) {
-            // Forward digit to TimeInput2
+            // Forward digit to TimeInput
             timeInputRef.current?.handleDigit(button);
         }
     };
@@ -133,7 +133,7 @@ function ClockGame2({ config, progressRef }) {
     return (
         <Box>
             <StyledClock currentTime={currentTime} fade={fade}>
-                <TimeInput2
+                <TimeInput
                     ref={timeInputRef}
                     value={answer}
                     onChange={handleTimeInputChange}

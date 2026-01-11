@@ -64,7 +64,7 @@ describe('ClockGame2 Component', () => {
     // Rendering Tests
     // ------------------------
     describe('Rendering', () => {
-        it('renders TimeInput2, analog clock, and virtual keyboard', () => {
+        it('renders TimeInput, analog clock, and virtual keyboard', () => {
             const { hoursSection, minutesSection, keyboardContainer } = renderClockGame();
 
             expect(hoursSection).toBeInTheDocument();

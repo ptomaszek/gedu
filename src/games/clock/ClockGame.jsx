@@ -4,7 +4,7 @@ import Clock from 'react-clock';
 import 'react-clock/dist/Clock.css';
 import Keyboard from 'react-simple-keyboard';
 import 'react-simple-keyboard/build/css/index.css';
-import TimeInput2 from './TimeInput2';
+import TimeInput from './TimeInput';
 import StyledClock from './StyledClock';
 
 function ClockGame({ config, progressRef }) {
@@ -151,7 +151,7 @@ function ClockGame({ config, progressRef }) {
     return (
         <Box>
             <StyledClock currentTime={currentTime} fade={fade}>
-                <TimeInput2
+                <TimeInput
                     ref={inputRef}
                     value={answer}
                     onChange={setAnswer}
@@ -201,7 +201,7 @@ function ClockGame({ config, progressRef }) {
                         if (button === '{bksp}') {
                             inputRef.current?.handleBackspace();
                         } else if (button === '{enter}') {
-                            // TimeInput2 will handle submission automatically in hours-only mode
+                            // TimeInput will handle submission automatically in hours-only mode
                             // But we'll also call handleSubmit for compatibility
                             const currentValue = inputRef.current?.getCurrentValue();
                             if (currentValue) {

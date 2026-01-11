@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Box, Typography } from '@mui/material';
 
-const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status, mode = 'full-time' }, ref) => {
+const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mode = 'full-time' }, ref) => {
     // Parse initial value into hours and minutes
     const parseTime = (timeString) => {
         const [hours = '00', minutes = '00'] = timeString.split(':');
@@ -473,6 +473,6 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status, mo
     );
 });
 
-TimeInput2.displayName = 'TimeInput2';
+TimeInput.displayName = 'TimeInput';
 
-export default TimeInput2;
+export default TimeInput;

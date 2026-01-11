@@ -1,16 +1,16 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import TimeInput2 from '../TimeInput2';
+import TimeInput from '../TimeInput';
 import React from 'react';
 import { vi } from 'vitest';
 
-describe('TimeInput2 Component - Hours-Only Mode', () => {
+describe('TimeInput Component - Hours-Only Mode', () => {
     let mockOnChange;
     let mockOnSubmit;
 
     const renderComponent = (props = {}) => {
         return render(
-            <TimeInput2
+            <TimeInput
                 value="00:00"
                 onChange={mockOnChange}
                 onSubmit={mockOnSubmit}
@@ -142,7 +142,7 @@ describe('TimeInput2 Component - Hours-Only Mode', () => {
 
             // Status = correct → green background
             rerender(
-                <TimeInput2
+                <TimeInput
                     value="15:00"
                     status="correct"
                     onChange={mockOnChange}
@@ -155,7 +155,7 @@ describe('TimeInput2 Component - Hours-Only Mode', () => {
 
             // Status = wrong → red background
             rerender(
-                <TimeInput2
+                <TimeInput
                     value="15:00"
                     status="wrong"
                     onChange={mockOnChange}
