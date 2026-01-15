@@ -24,9 +24,7 @@ import {
 } from 'react-router-dom';
 import MathGame from './games/math/MathGame';
 import ClockGame from './games/clock/ClockGame';
-import ClockGame2 from './games/clock/ClockGame2';
 import LevelProgressTracker from './LevelProgressTracker';
-import LevelInfo from './games/clock/LevelInfo';
 
 
 const gameConfig = {
@@ -45,8 +43,10 @@ const gameConfig = {
     clock: {
         title: 'Zegar',
         path: '/games/clock',
-        levels: [{}, {}, {}] // empty configs for now
-    }
+        levels: [
+            { type: 'full-hours' }, // 1 level only
+        ],
+    },
 };
 
 /* =========================
@@ -54,7 +54,7 @@ const gameConfig = {
    ========================= */
 
 function GameMenu({game, activePath, onItemClick}) {
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
 
     return (
         <>
@@ -116,7 +116,6 @@ function MenuList({onItemClick}) {
                 activePath={location.pathname}
                 onItemClick={onItemClick}
             />
-
             <GameMenu
                 game={gameConfig.clock}
                 activePath={location.pathname}
@@ -243,34 +242,31 @@ function AppContent() {
                         />
                     ))}
 
+                    <Route
+                        path={gameConfig.clock.path}
+                        element={
+                            <Container maxWidth="lg">
+                                <Typography variant="h6" sx={{ mt: 4 }}>
+                                    Poziomy:
+                                </Typography>
+                                <Typography>
+                                    Odczytywanie pełnych godzin z zegara analogowego.
+                                </Typography>
+                            </Container>
+                        }
+                    />
                     {gameConfig.clock.levels.map((config, index) => (
                         <Route
                             key={index}
                             path={`${gameConfig.clock.path}/levels/${index + 1}`}
                             element={
-                                <Box display="flex" flexDirection="column" alignItems="center" mt={4} px={1}>
-                                    {/* Level description */}
-                                    <LevelInfo config={config} level={index + 1} />
-
-                                    <Box sx={{ minWidth: 250, maxWidth: '90%' }}>
-                                        <LevelProgressTracker
-                                            key={`clock-level-${index + 1}`}
-                                            ref={progressRef}
-                                            tasksToComplete={10}
-                                            maxMistakes={3}
-                                            onLevelRestart={() => {}}
-                                            onNextLevel={() => {}}
-                                        />
-                                    </Box>
-                                    {index === 1 ? (
-                                        <ClockGame2 config={config} progressRef={progressRef} />
-                                    ) : (
-                                        <ClockGame config={config} progressRef={progressRef} />
-                                    )}
-                                </Box>
+                                <ClockGame
+                                    config={{ ...config, level: index + 1 }}
+                                />
                             }
                         />
                     ))}
+
                 </Routes>
             </Box>
         </Box>

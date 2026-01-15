@@ -20,7 +20,9 @@
     "react-dom": "^19.2",
     "react-router-dom": "^7.11.0",
     "react-simple-keyboard": "^3.8.0",
-    "react-use": "^17.6.0"
+    "react-use": "^17.6.0",
+    "@mui/x-date-pickers": "^8.25.0",
+    "date-fns": "^4.1.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
