@@ -1,137 +1,210 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import Keyboard from 'react-simple-keyboard';
 import 'react-simple-keyboard/build/css/index.css';
 
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { MultiSectionDigitalClock } from '@mui/x-date-pickers/MultiSectionDigitalClock';
+import { TimeField } from '@mui/x-date-pickers/TimeField';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { enUS } from 'date-fns/locale';
 
 import StyledClock from './StyledClock';
 import useClockQuestion from './useClockQuestion';
 
-function ClockQuestion({ progressRef }) {
-    const [selectedTime, setSelectedTime] = useState(null);    const [fade, setFade] = useState(true);
-    const [feedback, setFeedback] = useState('neutral'); // 'neutral' | 'wrong' | 'correct'
+/* =========================
+   HOUR VALIDATION + NORMALIZATION
+   ========================= */
 
+/**
+ * Validates input hour and converts it to analog hour (1–12).
+ * Returns:
+ *   - number (1–12) if valid
+ *   - null if invalid
+ */
+const normalizeAnalogHour = (value) => {
+    const hour = Number(value);
+
+    if (!Number.isInteger(hour)) return null;
+    if (hour < 0 || hour > 24) return null;
+
+    // Analog clocks are modulo-12 systems
+    const analog = hour % 12;
+    return analog === 0 ? 12 : analog;
+};
+
+function ClockQuestion({ progressRef }) {
+    const [input, setInput] = useState('');
+    const [feedback, setFeedback] = useState('neutral'); // neutral | wrong | correct
 
     const {
         currentTime,
-        correctAnswer,
+        correctAnswer, // ALWAYS 1–12
         generateQuestion,
     } = useClockQuestion({
         minHour: 1,
         maxHour: 12,
-        onQuestionGenerated: () => {
-            setSelectedTime(null);
-        },
+        onQuestionGenerated: () => setInput(''),
     });
 
+    /* -----------------------------
+       INIT
+    ----------------------------- */
     useEffect(() => {
         generateQuestion();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    /* -----------------------------
+       SUBMIT
+    ----------------------------- */
+    const submitAnswer = useCallback(() => {
+        if (!input) return;
 
-    const handleSubmit = () => {
-        if (!selectedTime) return;
+        const normalized = normalizeAnalogHour(input);
 
-        const selectedHour = selectedTime.getHours();
+        if (normalized === null) {
+            progressRef.current?.handleIncorrectAnswer();
+            setFeedback('wrong');
+            setTimeout(() => setFeedback('neutral'), 300);
+            return;
+        }
 
-        if (selectedHour === correctAnswer) {
+        if (normalized === correctAnswer) {
             progressRef.current?.handleCorrectAnswer();
-
             setFeedback('correct');
 
-            // Give time for green feedback
             setTimeout(() => {
-                setFade(false);
-
-                setTimeout(() => {
-                    generateQuestion();
-                    setSelectedTime(null);
-                    setFeedback('neutral');
-                    setFade(true);
-                }, 300);
+                generateQuestion();
+                setInput('');
+                setFeedback('neutral');
             }, 300);
         } else {
             progressRef.current?.handleIncorrectAnswer();
-
             setFeedback('wrong');
+            setTimeout(() => setFeedback('neutral'), 300);
+        }
+    }, [input, correctAnswer, generateQuestion, progressRef]);
 
-            // Clear red feedback but KEEP value
-            setTimeout(() => {
-                setFeedback('neutral');
-            }, 300);
+    /* -----------------------------
+       PHYSICAL KEYBOARD
+    ----------------------------- */
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (feedback !== 'neutral') return;
+
+            if (e.key === 'Enter') {
+                submitAnswer();
+                return;
+            }
+
+            if (e.key === 'Backspace') {
+                setInput((prev) => prev.slice(0, -1));
+                return;
+            }
+
+            if (/^\d$/.test(e.key)) {
+                setInput((prev) =>
+                    prev.length < 2 ? prev + e.key : prev
+                );
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [submitAnswer, feedback]);
+
+    /* -----------------------------
+       VIRTUAL KEYBOARD
+    ----------------------------- */
+    const handleVirtualKey = (key) => {
+        if (feedback !== 'neutral') return;
+
+        if (key === '{enter}') {
+            submitAnswer();
+            return;
+        }
+
+        if (key === '{bksp}') {
+            setInput((prev) => prev.slice(0, -1));
+            return;
+        }
+
+        if (/^\d$/.test(key)) {
+            setInput((prev) =>
+                prev.length < 2 ? prev + key : prev
+            );
         }
     };
 
-
     return (
-        <StyledClock currentTime={currentTime} fade={fade}>
-            <Box
-                data-testid="time-input-container"
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-                gap={2}
-                sx={{
-                    borderRadius: 2,
-                    padding: 1,
-                    transition: 'all 200ms ease',
-                    backgroundColor:
-                        feedback === 'wrong'
-                            ? 'rgb(248, 215, 218)'
-                            : feedback === 'correct'
-                                ? 'rgb(212, 237, 218)'
-                                : 'transparent',
-                    boxShadow:
-                        feedback === 'wrong'
-                            ? '0 0 0 2px rgba(220, 53, 69, 0.4)'
-                            : feedback === 'correct'
-                                ? '0 0 0 2px rgba(40, 167, 69, 0.4)'
-                                : 'none',
-                    transform:
-                        feedback === 'wrong'
-                            ? 'scale(0.95)'
-                            : 'scale(1)',
-                }}
-            >
-                <LocalizationProvider
-                    dateAdapter={AdapterDateFns}
-                    locale={enUS}
+        <StyledClock currentTime={currentTime}>
+            <Box display="flex" flexDirection="column" alignItems="center" gap={3}>
+                {/* INPUT ONLY (feedback here) */}
+                <Box
+                    data-testid="time-input-container"
+                    sx={{
+                        borderRadius: 2,
+                        padding: 1,
+                        transition: 'all 200ms ease',
+                        backgroundColor:
+                            feedback === 'wrong'
+                                ? 'rgb(248, 215, 218)'
+                                : feedback === 'correct'
+                                    ? 'rgb(212, 237, 218)'
+                                    : 'transparent',
+                        boxShadow:
+                            feedback === 'wrong'
+                                ? '0 0 0 2px rgba(220, 53, 69, 0.4)'
+                                : feedback === 'correct'
+                                    ? '0 0 0 2px rgba(40, 167, 69, 0.4)'
+                                    : 'none',
+                        transform:
+                            feedback === 'wrong' ? 'scale(0.95)' : 'scale(1)',
+                        pointerEvents:
+                            feedback !== 'neutral' ? 'none' : 'auto',
+                    }}
                 >
-                    <MultiSectionDigitalClock
-                        views={['hours']}
-                        ampm={false}
-                        value={selectedTime}
-                        onChange={(date) => {
-                            if (!date) return;
+                    <LocalizationProvider
+                        dateAdapter={AdapterDateFns}
+                        locale={enUS}
+                    >
+                        <TimeField
+                            value={
+                                input
+                                    ? new Date(0, 0, 0, Number(input))
+                                    : null
+                            }
+                            format="HH"
+                            readOnly
+                            sx={{
+                                width: 120,
+                                '& input': {
+                                    textAlign: 'center',
+                                    fontSize: '1.6rem',
+                                    fontWeight: 600,
+                                    letterSpacing: '0.1em',
+                                },
+                            }}
+                        />
+                    </LocalizationProvider>
+                </Box>
 
-                            const fixed = new Date(date);
-                            fixed.setMinutes(0);
-                            fixed.setSeconds(0);
-                            fixed.setMilliseconds(0);
-
-                            setSelectedTime(fixed);
-                        }}
-                    />
-                </LocalizationProvider>
-
-                <Box sx={{ width: 160 }}>
+                {/* KEYBOARD (no feedback styling) */}
+                <Box sx={{ width: 180 }}>
                     <Keyboard
-                        layout={{ default: ['{enter}'] }}
-                        display={{ '{enter}': 'OK' }}
-                        buttonTheme={[
-                            {
-                                class: selectedTime ? 'hg-ok-enabled' : 'hg-ok-disabled',
-                                buttons: '{enter}',
-                            },
-                        ]}
-                        onKeyPress={(btn) =>
-                            btn === '{enter}' && selectedTime && handleSubmit()
-                        }
+                        layout={{
+                            default: [
+                                '1 2 3',
+                                '4 5 6',
+                                '7 8 9',
+                                '{bksp} 0 {enter}',
+                            ],
+                        }}
+                        display={{
+                            '{enter}': 'OK',
+                            '{bksp}': '⌫',
+                        }}
+                        onKeyPress={handleVirtualKey}
                     />
                 </Box>
             </Box>

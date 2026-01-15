@@ -12,11 +12,7 @@ function useClockQuestion({ minHour = 1, maxHour = 12, onQuestionGenerated }) {
 
     const currentTime = useMemo(() => {
         if (hour == null) return null;
-        const d = new Date();
-        d.setHours(hour);
-        d.setMinutes(0);
-        d.setSeconds(0);
-        return d;
+        return new Date(2000, 0, 1, hour, 0, 0);
     }, [hour]);
 
     return {

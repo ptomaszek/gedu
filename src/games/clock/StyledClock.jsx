@@ -6,13 +6,13 @@ import 'react-clock/dist/Clock.css';
 /**
  * Shared StyledClock component that encapsulates the common clock styling
  * used in both ClockGame and ClockGame2
- * 
+ *
  * @param {Object} props
  * @param {Date} props.currentTime - The current time to display on the clock
  * @param {boolean} props.fade - Whether the fade animation is active
  * @param {React.ReactNode} props.children - The input component to display next to the clock
  */
-function StyledClock({ currentTime, fade, children }) {
+function StyledClock({ currentTime, fade = true, children }) {
     return (
         <Box
             sx={{
