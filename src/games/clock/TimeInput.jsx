@@ -8,7 +8,8 @@ import { TextField } from '@mui/material';
  * @param {Object} props
  * @param {string} props.value - The current input value
  * @param {number} [props.width=120] - Width of the input field
- * @param {boolean} [props.readOnly=true] - Whether the input is read-only
+ * @param {boolean} [props.disabled=false] - Whether the input is disabled
+ * @param {string} [props.bgcolor='white'] - Background color of the input
  * @param {Object} [props.sx] - Additional styling
  * @param {Object} [props.inputProps] - Additional input properties
  * @param {React.Ref} ref - Ref to the TextField component
@@ -16,7 +17,8 @@ import { TextField } from '@mui/material';
 const TimeInput = forwardRef(({
     value,
     width = 120,
-    readOnly = true,
+    disabled = false,
+    bgcolor = 'white',
     sx,
     inputProps,
     ...otherProps
@@ -25,18 +27,23 @@ const TimeInput = forwardRef(({
         <TextField
             ref={ref}
             value={value}
+            disabled={disabled}
             inputProps={{
+                readOnly: true,
                 style: {
                     textAlign: 'center',
                     fontSize: '1.6rem',
                     fontWeight: 600,
                     letterSpacing: '0.1em',
                 },
-                readOnly,
                 ...inputProps,
             }}
             sx={{
                 width,
+                '& .MuiOutlinedInput-root': {
+                    bgcolor,
+                    transition: 'background-color 0.5s ease',
+                },
                 ...sx,
             }}
             {...otherProps}

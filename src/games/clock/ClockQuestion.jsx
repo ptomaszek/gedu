@@ -55,6 +55,8 @@ const getValidEquivalents = (analogHour) => {
 function ClockQuestion({ progressRef }) {
     const [input, setInput] = useState('');
     const [feedback, setFeedback] = useState('neutral'); // neutral | wrong | correct
+    const [inputBg, setInputBg] = useState('white');
+    const [fade, setFade] = useState(true);
     const inputRef = useRef(null);
     const replaceOnNextInput = useRef(false);
 
@@ -68,6 +70,7 @@ function ClockQuestion({ progressRef }) {
         onQuestionGenerated: () => {
             setInput('');
             replaceOnNextInput.current = false;
+            setInputBg('white');
         },
     });
 
@@ -84,8 +87,13 @@ function ClockQuestion({ progressRef }) {
         if (normalizedInput === null) {
             progressRef.current?.handleIncorrectAnswer();
             setFeedback('wrong');
+            setInputBg('#f8d7da');
             replaceOnNextInput.current = true;
-            setTimeout(() => setFeedback('neutral'), 1000);
+            setTimeout(() => {
+                setFeedback('neutral');
+                setInputBg('white');
+                focusAndSelectInput();
+            }, 1000);
             return;
         }
 
@@ -98,18 +106,25 @@ function ClockQuestion({ progressRef }) {
         if (isCorrect) {
             progressRef.current?.handleCorrectAnswer();
             setFeedback('correct');
+            setInputBg('#d4edda');
 
             setTimeout(() => {
-                generateQuestion();
-                setInput('');
-                setFeedback('neutral');
-            }, 300);
+                setFade(false);
+                setTimeout(() => {
+                    generateQuestion();
+                    setFade(true);
+                    setFeedback('neutral');
+                    focusAndSelectInput();
+                }, 250);
+            }, 600);
         } else {
             progressRef.current?.handleIncorrectAnswer();
             setFeedback('wrong');
+            setInputBg('#f8d7da');
             replaceOnNextInput.current = true;
             setTimeout(() => {
                 setFeedback('neutral');
+                setInputBg('white');
                 focusAndSelectInput();
             }, 1000);
         }
@@ -175,38 +190,29 @@ function ClockQuestion({ progressRef }) {
             <StyledClock currentTime={currentTime} />
 
             <Box mt={1}>
-                <Box display="flex" flexDirection="column" alignItems="center" gap={3}>
-                    <Box
-                        sx={{
-                            borderRadius: 2,
-                            padding: 1,
-                            transition: 'all 200ms ease',
-                            backgroundColor:
-                                feedback === 'wrong'
-                                    ? 'rgb(248, 215, 218)'
-                                    : feedback === 'correct'
-                                        ? 'rgb(212, 237, 218)'
-                                        : 'transparent',
-                            boxShadow:
-                                feedback === 'wrong'
-                                    ? '0 0 0 2px rgba(220, 53, 69, 0.4)'
-                                    : feedback === 'correct'
-                                        ? '0 0 0 2px rgba(40, 167, 69, 0.4)'
-                                        : 'none',
-                            pointerEvents: feedback !== 'neutral' ? 'none' : 'auto',
-                        }}
-                    >
-                        <TimeInput
-                            ref={inputRef}
-                            value={input}
-                        />
+                <Box
+                    sx={{
+                        opacity: fade ? 1 : 0,
+                        transform: fade ? 'scale(1)' : 'scale(0.98)',
+                        transition: 'opacity 250ms ease, transform 250ms ease',
+                    }}
+                >
+                    <Box display="flex" flexDirection="column" alignItems="center" gap={3}>
+                        <Box display="flex" alignItems="center" justifyContent="center" gap={2} mb={2}>
+                            <TimeInput
+                                ref={inputRef}
+                                value={input}
+                                bgcolor={inputBg}
+                                disabled={feedback !== 'neutral'}
+                            />
+                        </Box>
                     </Box>
-
-                    <NumericKeyboard
-                        width={180}
-                        onKeyPress={handleVirtualKey}
-                    />
                 </Box>
+
+                <NumericKeyboard
+                    width={180}
+                    onKeyPress={handleVirtualKey}
+                />
             </Box>
         </Box>
     );
