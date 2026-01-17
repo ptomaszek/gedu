@@ -137,78 +137,94 @@ function ClockQuestion({ progressRef }) {
     };
 
     return (
-        <StyledClock currentTime={currentTime}>
-            <Box display="flex" flexDirection="column" alignItems="center" gap={3}>
-                {/* INPUT ONLY (feedback here) */}
-                <Box
-                    data-testid="time-input-container"
-                    sx={{
-                        borderRadius: 2,
-                        padding: 1,
-                        transition: 'all 200ms ease',
-                        backgroundColor:
-                            feedback === 'wrong'
-                                ? 'rgb(248, 215, 218)'
-                                : feedback === 'correct'
-                                    ? 'rgb(212, 237, 218)'
-                                    : 'transparent',
-                        boxShadow:
-                            feedback === 'wrong'
-                                ? '0 0 0 2px rgba(220, 53, 69, 0.4)'
-                                : feedback === 'correct'
-                                    ? '0 0 0 2px rgba(40, 167, 69, 0.4)'
-                                    : 'none',
-                        transform:
-                            feedback === 'wrong' ? 'scale(0.95)' : 'scale(1)',
-                        pointerEvents:
-                            feedback !== 'neutral' ? 'none' : 'auto',
-                    }}
-                >
-                    <LocalizationProvider
-                        dateAdapter={AdapterDateFns}
-                        locale={enUS}
-                    >
-                        <TimeField
-                            value={
-                                input
-                                    ? new Date(0, 0, 0, Number(input))
-                                    : null
-                            }
-                            format="HH"
-                            readOnly
-                            sx={{
-                                width: 120,
-                                '& input': {
-                                    textAlign: 'center',
-                                    fontSize: '1.6rem',
-                                    fontWeight: 600,
-                                    letterSpacing: '0.1em',
-                                },
-                            }}
-                        />
-                    </LocalizationProvider>
-                </Box>
+        <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+        >
+            {/* CLOCK */}
+            <StyledClock currentTime={currentTime} />
 
-                {/* KEYBOARD (no feedback styling) */}
-                <Box sx={{ width: 180 }}>
-                    <Keyboard
-                        layout={{
-                            default: [
-                                '1 2 3',
-                                '4 5 6',
-                                '7 8 9',
-                                '{bksp} 0 {enter}',
-                            ],
+            {/* SMALL GAP */}
+            <Box mt={1}>
+                {/* INPUT + KEYBOARD GROUP */}
+                <Box
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="center"
+                    gap={3}
+                >
+                    {/* INPUT */}
+                    <Box
+                        data-testid="time-input-container"
+                        sx={{
+                            borderRadius: 2,
+                            padding: 1,
+                            transition: 'all 200ms ease',
+                            backgroundColor:
+                                feedback === 'wrong'
+                                    ? 'rgb(248, 215, 218)'
+                                    : feedback === 'correct'
+                                        ? 'rgb(212, 237, 218)'
+                                        : 'transparent',
+                            boxShadow:
+                                feedback === 'wrong'
+                                    ? '0 0 0 2px rgba(220, 53, 69, 0.4)'
+                                    : feedback === 'correct'
+                                        ? '0 0 0 2px rgba(40, 167, 69, 0.4)'
+                                        : 'none',
+                            transform:
+                                feedback === 'wrong' ? 'scale(0.95)' : 'scale(1)',
+                            pointerEvents:
+                                feedback !== 'neutral' ? 'none' : 'auto',
                         }}
-                        display={{
-                            '{enter}': 'OK',
-                            '{bksp}': '⌫',
-                        }}
-                        onKeyPress={handleVirtualKey}
-                    />
+                    >
+                        <LocalizationProvider
+                            dateAdapter={AdapterDateFns}
+                            locale={enUS}
+                        >
+                            <TimeField
+                                value={
+                                    input
+                                        ? new Date(0, 0, 0, Number(input))
+                                        : null
+                                }
+                                format="HH"
+                                readOnly
+                                sx={{
+                                    width: 120,
+                                    '& input': {
+                                        textAlign: 'center',
+                                        fontSize: '1.6rem',
+                                        fontWeight: 600,
+                                        letterSpacing: '0.1em',
+                                    },
+                                }}
+                            />
+                        </LocalizationProvider>
+                    </Box>
+
+                    {/* KEYBOARD */}
+                    <Box sx={{ width: 180 }}>
+                        <Keyboard
+                            layout={{
+                                default: [
+                                    '1 2 3',
+                                    '4 5 6',
+                                    '7 8 9',
+                                    '{bksp} 0 {enter}',
+                                ],
+                            }}
+                            display={{
+                                '{enter}': 'OK',
+                                '{bksp}': '⌫',
+                            }}
+                            onKeyPress={handleVirtualKey}
+                        />
+                    </Box>
                 </Box>
             </Box>
-        </StyledClock>
+        </Box>
     );
 }
 
