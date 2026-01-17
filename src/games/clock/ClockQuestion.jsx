@@ -11,45 +11,26 @@ import TimeInput from './TimeInput';
    ========================= */
 
 /**
- * Normalizes input hour to 24-hour format and validates it.
- * Returns:
- *   - number (0-24) if valid
- *   - null if invalid
- */
-const normalizeHourInput = (value) => {
-    const hour = Number(value);
-    if (!Number.isInteger(hour)) return null;
-    if (hour < 0 || hour > 99) return null;
-
-    // Normalize to 24-hour format (0-24)
-    const normalized = hour % 24;
-    return normalized;
-};
-
-/**
- * Gets all valid 24-hour equivalents for an analog clock hour (1-12)
+ * Gets all valid input equivalents for an analog clock hour (1-12)
+ * Returns exact input values that should be accepted (no normalization)
  */
 const getValidEquivalents = (analogHour) => {
     const equivalents = [];
 
-    // Direct mapping: 1-11, 12
+    // Direct 24-hour equivalents
     if (analogHour >= 1 && analogHour <= 11) {
-        equivalents.push(analogHour);
-        equivalents.push(analogHour + 12);
+        equivalents.push(analogHour);      // 1-11
+        equivalents.push(analogHour + 12); // 13-23
     } else if (analogHour === 12) {
-        equivalents.push(0, 12, 24);
+        equivalents.push(12, 24, 0, 0);  // 12, 24, 0, 0
     }
 
-    // Add zero-padded versions for display consistency
-    const paddedEquivalents = [];
-    for (const eq of equivalents) {
-        paddedEquivalents.push(eq);
-        if (eq < 10 && eq !== 0) {
-            paddedEquivalents.push(eq * 10); // e.g., 6 -> 06
-        }
+    // Add zero-padded versions for single-digit hours (except 0)
+    if (analogHour >= 1 && analogHour <= 9) {
+        equivalents.push(analogHour * 10); // 01-09 (as 10-90)
     }
 
-    return paddedEquivalents;
+    return equivalents;
 };
 
 function ClockQuestion({ progressRef }) {
@@ -82,9 +63,11 @@ function ClockQuestion({ progressRef }) {
     const submitAnswer = useCallback(() => {
         if (!input) return;
 
-        const normalizedInput = normalizeHourInput(input);
+        // Convert input to number for validation
+        const userInput = Number(input);
 
-        if (normalizedInput === null) {
+        // Validate input range (0-99)
+        if (!Number.isInteger(userInput) || userInput < 0 || userInput > 99) {
             progressRef.current?.handleIncorrectAnswer();
             setFeedback('wrong');
             setInputBg('#f8d7da');
@@ -100,8 +83,8 @@ function ClockQuestion({ progressRef }) {
         // Get all valid equivalents for the current analog clock hour
         const validEquivalents = getValidEquivalents(correctAnswer);
 
-        // Check if the normalized input matches any valid equivalent
-        const isCorrect = validEquivalents.includes(normalizedInput);
+        // Check if the raw input matches any valid equivalent
+        const isCorrect = validEquivalents.includes(userInput);
 
         if (isCorrect) {
             progressRef.current?.handleCorrectAnswer();
