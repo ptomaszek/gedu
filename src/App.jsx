@@ -31,20 +31,38 @@ const gameConfig = {
     math: {
         title: 'Matematyka',
         path: '/games/math',
-        levels: [
-            {coefficients: 2, operations: ['+', '-'], range: 10},
-            {coefficients: 2, operations: ['+', '-'], range: 20},
-            {coefficients: 3, operations: ['+', '-'], range: 10},
-            {coefficients: 3, operations: ['+', '-'], range: 20},
-            {coefficients: 2, operations: ['*'], range: 10}
+        groups: [
+            {
+                title: 'Dodawanie i odejmowanie',
+                id: 'add-sub',
+                levels: [
+                    {coefficients: 2, operations: ['+', '-'], range: 10},
+                    {coefficients: 2, operations: ['+', '-'], range: 20},
+                    {coefficients: 3, operations: ['+', '-'], range: 10},
+                    {coefficients: 3, operations: ['+', '-'], range: 20},
+                ]
+            },
+            {
+                title: 'Mnożenie',
+                id: 'mul',
+                levels: [
+                    {coefficients: 2, operations: ['*'], range: 10}
+                ]
+            }
         ]
     },
 
     clock: {
         title: 'Zegar',
         path: '/games/clock',
-        levels: [
-            { type: 'full-hours' }, // 1 level only
+        groups: [
+            {
+                title: 'Godziny',
+                id: 'hours',
+                levels: [
+                    { type: 'full-hours' },
+                ]
+            }
         ],
     },
 };
@@ -52,6 +70,49 @@ const gameConfig = {
 /* =========================
    MENU
    ========================= */
+
+function GameMenuGroup({group, gamePath, activePath, onItemClick}) {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <>
+            <ListItem disablePadding>
+                <ListItemButton onClick={() => setOpen(o => !o)} sx={{pl: 4}}>
+                    <ListItemText
+                        primary={group.title}
+                        primaryTypographyProps={{fontSize: '0.9rem'}}
+                    />
+                    {open ? '▲' : '▼'}
+                </ListItemButton>
+            </ListItem>
+            <Collapse in={open} timeout="auto" unmountOnExit>
+                <List disablePadding>
+                    {group.levels.map((_, index) => {
+                        const level = index + 1;
+                        const path = `${gamePath}/${group.id}/levels/${level}`;
+
+                        return (
+                            <ListItem key={level} disablePadding>
+                                <ListItemButton
+                                    component={RouterLink}
+                                    to={path}
+                                    selected={activePath === path}
+                                    onClick={onItemClick}
+                                    sx={{pl: 6}}
+                                >
+                                    <ListItemText
+                                        primary={`Poziom ${level}`}
+                                        primaryTypographyProps={{fontSize: '0.85rem'}}
+                                    />
+                                </ListItemButton>
+                            </ListItem>
+                        );
+                    })}
+                </List>
+            </Collapse>
+        </>
+    );
+}
 
 function GameMenu({game, activePath, onItemClick}) {
     const [open, setOpen] = useState(false);
@@ -82,24 +143,15 @@ function GameMenu({game, activePath, onItemClick}) {
                         </ListItemButton>
                     </ListItem>
 
-                    {game.levels.map((_, index) => {
-                        const level = index + 1;
-                        const path = `${game.path}/levels/${level}`;
-
-                        return (
-                            <ListItem key={level} disablePadding>
-                                <ListItemButton
-                                    component={RouterLink}
-                                    to={path}
-                                    selected={activePath === path}
-                                    onClick={onItemClick}
-                                    sx={{pl: 4}}
-                                >
-                                    <ListItemText primary={`Poziom ${level}`}/>
-                                </ListItemButton>
-                            </ListItem>
-                        );
-                    })}
+                    {game.groups.map((group) => (
+                        <GameMenuGroup
+                            key={group.id}
+                            group={group}
+                            gamePath={game.path}
+                            activePath={activePath}
+                            onItemClick={onItemClick}
+                        />
+                    ))}
                 </List>
             </Collapse>
         </>
@@ -234,13 +286,15 @@ function AppContent() {
                         }
                     />
 
-                    {gameConfig.math.levels.map((config, index) => (
-                        <Route
-                            key={index}
-                            path={`${gameConfig.math.path}/levels/${index + 1}`}
-                            element={<MathGame config={{ ...config, level: index + 1 }} progressRef={progressRef} />}
-                        />
-                    ))}
+                    {gameConfig.math.groups.flatMap(group =>
+                        group.levels.map((config, index) => (
+                            <Route
+                                key={`${group.id}-${index}`}
+                                path={`${gameConfig.math.path}/${group.id}/levels/${index + 1}`}
+                                element={<MathGame config={{ ...config, level: index + 1 }} progressRef={progressRef} />}
+                            />
+                        ))
+                    )}
 
                     <Route
                         path={gameConfig.clock.path}
@@ -255,17 +309,19 @@ function AppContent() {
                             </Container>
                         }
                     />
-                    {gameConfig.clock.levels.map((config, index) => (
-                        <Route
-                            key={index}
-                            path={`${gameConfig.clock.path}/levels/${index + 1}`}
-                            element={
-                                <ClockGame
-                                    config={{ ...config, level: index + 1 }}
-                                />
-                            }
-                        />
-                    ))}
+                    {gameConfig.clock.groups.flatMap(group =>
+                        group.levels.map((config, index) => (
+                            <Route
+                                key={`${group.id}-${index}`}
+                                path={`${gameConfig.clock.path}/${group.id}/levels/${index + 1}`}
+                                element={
+                                    <ClockGame
+                                        config={{ ...config, level: index + 1 }}
+                                    />
+                                }
+                            />
+                        ))
+                    )}
 
                 </Routes>
             </Box>
