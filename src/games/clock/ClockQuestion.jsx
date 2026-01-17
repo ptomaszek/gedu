@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Box, TextField } from '@mui/material';
+import { Box } from '@mui/material';
 
 import StyledClock from './StyledClock';
 import useClockQuestion from './useClockQuestion';
 import NumericKeyboard from '../../components/keyboards/NumericKeyboard';
+import TimeInput from './TimeInput';
 
 /* =========================
    HOUR VALIDATION + NORMALIZATION
@@ -195,21 +196,9 @@ function ClockQuestion({ progressRef }) {
                             pointerEvents: feedback !== 'neutral' ? 'none' : 'auto',
                         }}
                     >
-                        <TextField
+                        <TimeInput
                             ref={inputRef}
                             value={input}
-                            inputProps={{
-                                style: {
-                                    textAlign: 'center',
-                                    fontSize: '1.6rem',
-                                    fontWeight: 600,
-                                    letterSpacing: '0.1em',
-                                },
-                                readOnly: true,
-                            }}
-                            sx={{
-                                width: 120,
-                            }}
                         />
                     </Box>
 

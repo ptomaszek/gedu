@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { TextField, Box, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+import AnswerInput from './AnswerInput';
 
 import QuestionGenerator from './QuestionGenerator';
 import KaTeXComponents from './KaTeXComponents';
@@ -132,18 +133,11 @@ function MathQuestion({ config, progressRef }) {
                         <KaTeXComponents math={latexExpression} />
                     </Typography>
 
-                    <TextField
+                    <AnswerInput
                         ref={inputRef}
                         value={answer}
-                        disabled={status === 'correct'}
-                        inputProps={{ readOnly: true }}
-                        sx={{
-                            width: 70,
-                            '& .MuiOutlinedInput-root': {
-                                bgcolor: inputBg,
-                                transition: 'background-color 0.5s ease',
-                            },
-                        }}
+                        disabled={status in ['correct']}
+                        bgcolor={inputBg}
                     />
                 </Box>
             </Box>
