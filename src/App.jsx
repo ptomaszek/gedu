@@ -128,21 +128,6 @@ function GameMenu({game, activePath, onItemClick}) {
 
             <Collapse in={open} timeout="auto" unmountOnExit>
                 <List disablePadding>
-                    <ListItem disablePadding>
-                        <ListItemButton
-                            component={RouterLink}
-                            to={game.path}
-                            selected={activePath === game.path}
-                            onClick={onItemClick}
-                            sx={{pl: 4}}
-                        >
-                            <ListItemText
-                                primary="Opis poziomów"
-                                primaryTypographyProps={{fontSize: '0.8rem'}}
-                            />
-                        </ListItemButton>
-                    </ListItem>
-
                     {game.groups.map((group) => (
                         <GameMenuGroup
                             key={group.id}
@@ -274,18 +259,6 @@ function AppContent() {
                         }
                     />
 
-                    <Route
-                        path={gameConfig.math.path}
-                        element={
-                            <Container maxWidth="lg">
-                                <Typography variant="h6" sx={{ mt: 4 }}>
-                                    Poziomy:
-                                </Typography>
-                                <Typography>TODO list with descriptions</Typography>
-                            </Container>
-                        }
-                    />
-
                     {gameConfig.math.groups.flatMap(group =>
                         group.levels.map((config, index) => (
                             <Route
@@ -296,19 +269,6 @@ function AppContent() {
                         ))
                     )}
 
-                    <Route
-                        path={gameConfig.clock.path}
-                        element={
-                            <Container maxWidth="lg">
-                                <Typography variant="h6" sx={{ mt: 4 }}>
-                                    Poziomy:
-                                </Typography>
-                                <Typography>
-                                    Odczytywanie pełnych godzin z zegara analogowego.
-                                </Typography>
-                            </Container>
-                        }
-                    />
                     {gameConfig.clock.groups.flatMap(group =>
                         group.levels.map((config, index) => (
                             <Route
