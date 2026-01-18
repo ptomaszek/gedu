@@ -1,276 +1,122 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Box } from '@mui/material';
 
 import StyledClock from './StyledClock';
 import useClockQuestion from './useClockQuestion';
 import NumericKeyboard from '../../components/keyboards/NumericKeyboard';
 import MultiTimeInput from './MultiTimeInput';
-import { isCorrectHourAnswer, isCorrectTimeAnswer } from './validation';
+import { getStrategy } from './clockStrategies';
 
 function ClockQuestion({ config, progressRef }) {
-    // Determine level type and input mode
-    const isLevel2 = config.type === 'hours-minutes';
-    const includeMinutes = isLevel2;
+    // 1. Load Strategy
+    const strategy = useMemo(() => getStrategy(config.type), [config.type]);
 
-    // State for Level 1 (hours only)
-    const [hourInput, setHourInput] = useState('');
-    // State for Level 2 (hours and minutes)
-    const [hoursInput, setHoursInput] = useState('');
-    const [minutesInput, setMinutesInput] = useState('');
+    // 2. Unified State
+    const [inputs, setInputs] = useState({ hh: '', mm: '' });
     const [activeSection, setActiveSection] = useState('hh');
 
-    const [feedback, setFeedback] = useState('neutral'); // neutral | wrong | correct
+    // UI State
+    const [feedback, setFeedback] = useState('neutral');
     const [inputBg, setInputBg] = useState('white');
     const [fade, setFade] = useState(true);
-    const inputRef = useRef(null);
+
+    // Logic refs
     const replaceOnNextInput = useRef(false);
 
-    const {
-        currentTime,
-        correctAnswer,
-        generateQuestion,
-    } = useClockQuestion({
+    const { currentTime, correctAnswer, generateQuestion } = useClockQuestion({
         minHour: 1,
         maxHour: 12,
-        includeMinutes,
+        includeMinutes: strategy.includeMinutesInClock,
         onQuestionGenerated: () => {
-            if (isLevel2) {
-                setHoursInput('');
-                setMinutesInput('');
-            } else {
-                setHourInput('');
-            }
+            setInputs({ hh: '', mm: '' });
+            setActiveSection('hh'); // Always reset to first section
             replaceOnNextInput.current = false;
             setInputBg('white');
-            setActiveSection('hh');
         },
     });
 
     useEffect(() => {
         generateQuestion();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const submitAnswer = useCallback(() => {
-        if (isLevel2) {
-            // Level 2: Hours and minutes validation
-            if (!hoursInput || !minutesInput) return;
-
-            const userHours = parseInt(hoursInput.padStart(2, '0'), 10);
-            const userMinutes = parseInt(minutesInput.padStart(2, '0'), 10);
-
-            // Validate ranges
-            if (userHours < 0 || userHours > 24 || userMinutes < 0 || userMinutes > 59) {
-                progressRef.current?.handleIncorrectAnswer();
-                setFeedback('wrong');
-                setInputBg('#f8d7da');
-                replaceOnNextInput.current = true;
-                setTimeout(() => {
-                    setFeedback('neutral');
-                    setInputBg('white');
-                    focusAndSelectInput();
-                }, 1000);
-                return;
-            }
-
-            // Check if the user input is correct
-            const isCorrect = isCorrectTimeAnswer(userHours, userMinutes, correctAnswer.hour, correctAnswer.minute);
-
-            if (isCorrect) {
-                progressRef.current?.handleCorrectAnswer();
-                setFeedback('correct');
-                setInputBg('#d4edda');
-
-                setTimeout(() => {
-                    setFade(false);
-                    setTimeout(() => {
-                        generateQuestion();
-                        setFade(true);
-                        setFeedback('neutral');
-                        focusAndSelectInput();
-                    }, 250);
-                }, 600);
-            } else {
-                progressRef.current?.handleIncorrectAnswer();
-                setFeedback('wrong');
-                setInputBg('#f8d7da');
-                replaceOnNextInput.current = true;
-                setTimeout(() => {
-                    setFeedback('neutral');
-                    setInputBg('white');
-                    focusAndSelectInput();
-                }, 1000);
-            }
-        } else {
-            // Level 1: Hours only validation (original logic)
-            if (!hourInput) return;
-
-            // Convert input to number for validation
-            const userInput = Number(hourInput);
-
-            // Validate input range (0-99)
-            if (!Number.isInteger(userInput) || userInput < 0 || userInput > 99) {
-                progressRef.current?.handleIncorrectAnswer();
-                setFeedback('wrong');
-                setInputBg('#f8d7da');
-                replaceOnNextInput.current = true;
-                setTimeout(() => {
-                    setFeedback('neutral');
-                    setInputBg('white');
-                    focusAndSelectInput();
-                }, 1000);
-                return;
-            }
-
-            // Check if the user input is a valid equivalent for the analog clock hour
-            const isCorrect = isCorrectHourAnswer(userInput, correctAnswer.hour);
-
-            if (isCorrect) {
-                progressRef.current?.handleCorrectAnswer();
-                setFeedback('correct');
-                setInputBg('#d4edda');
-
-                setTimeout(() => {
-                    setFade(false);
-                    setTimeout(() => {
-                        generateQuestion();
-                        setFade(true);
-                        setFeedback('neutral');
-                        focusAndSelectInput();
-                    }, 250);
-                }, 600);
-            } else {
-                progressRef.current?.handleIncorrectAnswer();
-                setFeedback('wrong');
-                setInputBg('#f8d7da');
-                replaceOnNextInput.current = true;
-                setTimeout(() => {
-                    setFeedback('neutral');
-                    setInputBg('white');
-                    focusAndSelectInput();
-                }, 1000);
-            }
-        }
-    }, [isLevel2, hoursInput, minutesInput, hourInput, correctAnswer, generateQuestion, progressRef]);
-
-    const focusAndSelectInput = useCallback(() => {
-        const input = inputRef.current?.querySelector('input');
-        if (input) {
-            input.focus();
-            input.select();
-        }
-    }, []);
-
-    // Handle section click for Level 2
-    const handleSectionClick = useCallback((section) => {
-        if (isLevel2) {
-            setActiveSection(section);
-        }
-    }, [isLevel2]);
-
-    // Handle keyboard input
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (feedback !== 'neutral') return;
-
-            if (e.key === 'Enter') {
-                submitAnswer();
-                return;
-            }
-
-            if (e.key === 'Backspace') {
-                if (isLevel2) {
-                    if (activeSection === 'hh') {
-                        setHoursInput(prev => prev.slice(0, -1));
-                    } else {
-                        setMinutesInput(prev => prev.slice(0, -1));
-                    }
-                } else {
-                    setHourInput(prev => prev.slice(0, -1));
-                }
-                return;
-            }
-
-            if (/^\d$/.test(e.key)) {
-                if (isLevel2) {
-                    if (activeSection === 'hh') {
-                        setHoursInput(prev => {
-                            if (replaceOnNextInput.current) {
-                                replaceOnNextInput.current = false;
-                                return e.key;
-                            }
-                            return prev.length < 2 ? prev + e.key : prev;
-                        });
-                    } else {
-                        setMinutesInput(prev => {
-                            if (replaceOnNextInput.current) {
-                                replaceOnNextInput.current = false;
-                                return e.key;
-                            }
-                            return prev.length < 2 ? prev + e.key : prev;
-                        });
-                    }
-                } else {
-                    setHourInput(prev => {
-                        if (replaceOnNextInput.current) {
-                            replaceOnNextInput.current = false;
-                            return e.key;
-                        }
-                        return prev.length < 2 ? prev + e.key : prev;
-                    });
-                }
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [submitAnswer, feedback, isLevel2, activeSection, replaceOnNextInput]);
-
-    // Handle virtual keyboard input
-    const handleVirtualKey = (key) => {
+    // 3. Generic Input Handler
+    const handleInput = useCallback((key) => {
         if (feedback !== 'neutral') return;
 
-        if (key === '{enter}') {
-            submitAnswer();
-        } else if (key === '{bksp}') {
-            if (isLevel2) {
-                if (activeSection === 'hh') {
-                    setHoursInput(prev => prev.slice(0, -1));
-                } else {
-                    setMinutesInput(prev => prev.slice(0, -1));
-                }
-            } else {
-                setHourInput(prev => prev.slice(0, -1));
-            }
-        } else if (/^\d$/.test(key)) {
-            if (isLevel2) {
-                if (activeSection === 'hh') {
-                    setHoursInput(prev => {
-                        if (replaceOnNextInput.current) {
-                            replaceOnNextInput.current = false;
-                            return key;
-                        }
-                        return prev.length < 2 ? prev + key : prev;
-                    });
-                } else {
-                    setMinutesInput(prev => {
-                        if (replaceOnNextInput.current) {
-                            replaceOnNextInput.current = false;
-                            return key;
-                        }
-                        return prev.length < 2 ? prev + key : prev;
-                    });
-                }
-            } else {
-                setHourInput(prev => {
-                    if (replaceOnNextInput.current) {
-                        replaceOnNextInput.current = false;
-                        return key;
-                    }
-                    return prev.length < 2 ? prev + key : prev;
-                });
-            }
+        // Determine which field we are editing
+        const field = activeSection;
+
+        if (key === 'Backspace' || key === '{bksp}') {
+            setInputs(prev => ({ ...prev, [field]: prev[field].slice(0, -1) }));
+            return;
         }
+
+        if (/^\d$/.test(key)) {
+            setInputs(prev => {
+                // If we flagged to replace (e.g., after an error), clear first
+                const currentVal = replaceOnNextInput.current ? '' : prev[field];
+                if (replaceOnNextInput.current) replaceOnNextInput.current = false;
+
+                // Simple length limit (2 digits)
+                if (currentVal.length >= 2) return prev;
+
+                return { ...prev, [field]: currentVal + key };
+            });
+
+            // Optional: Auto-advance focus if 2 digits entered?
+            // if (strategy.sections.includes('mm') && field === 'hh' && newVal.length === 2) setActiveSection('mm');
+        }
+    }, [activeSection, feedback]);
+
+    // 4. Generic Submission
+    const submitAnswer = useCallback(() => {
+        // Ensure all required fields are filled
+        const isComplete = strategy.sections.every(sec => inputs[sec] !== '');
+
+        if (!isComplete) return;
+
+        const isCorrect = strategy.isCorrect(inputs, correctAnswer);
+
+        if (isCorrect) {
+            progressRef.current?.handleCorrectAnswer();
+            setFeedback('correct');
+            setInputBg('#d4edda');
+
+            setTimeout(() => {
+                setFade(false);
+                setTimeout(() => {
+                    generateQuestion();
+                    setFade(true);
+                    setFeedback('neutral');
+                }, 250);
+            }, 600);
+        } else {
+            progressRef.current?.handleIncorrectAnswer();
+            setFeedback('wrong');
+            setInputBg('#f8d7da');
+            replaceOnNextInput.current = true;
+
+            setTimeout(() => {
+                setFeedback('neutral');
+                setInputBg('white');
+                // Don't clear inputs, let user fix them
+            }, 1000);
+        }
+    }, [inputs, strategy, correctAnswer, generateQuestion, progressRef]);
+
+    // Keyboard Listeners
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Enter') submitAnswer();
+            else handleInput(e.key);
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleInput, submitAnswer]);
+
+    const handleVirtualKey = (key) => {
+        if (key === '{enter}') submitAnswer();
+        else handleInput(key);
     };
 
     return (
@@ -278,41 +124,24 @@ function ClockQuestion({ config, progressRef }) {
             <StyledClock currentTime={currentTime} />
 
             <Box mt={1}>
-                <Box
-                    sx={{
-                        opacity: fade ? 1 : 0,
-                        transform: fade ? 'scale(1)' : 'scale(0.98)',
-                        transition: 'opacity 250ms ease, transform 250ms ease',
-                    }}
-                >
-                        <Box display="flex" flexDirection="column" alignItems="center" gap={3}>
-                            <Box display="flex" alignItems="center" justifyContent="center" gap={2} mb={2}>
-                                {isLevel2 ? (
-                                    <MultiTimeInput
-                                        ref={inputRef}
-                                        sections={['hh', 'mm']}
-                                        values={{ hh: hoursInput, mm: minutesInput }}
-                                        activeSection={activeSection}
-                                        bgcolor={inputBg}
-                                        disabled={feedback !== 'neutral'}
-                                        onSectionClick={handleSectionClick}
-                                    />
-                                ) : (
-                                    <MultiTimeInput
-                                        ref={inputRef}
-                                        values={hourInput}
-                                        bgcolor={inputBg}
-                                        disabled={feedback !== 'neutral'}
-                                    />
-                                )}
-                            </Box>
-                        </Box>
+                <Box sx={{
+                    opacity: fade ? 1 : 0,
+                    transform: fade ? 'scale(1)' : 'scale(0.98)',
+                    transition: 'opacity 250ms ease, transform 250ms ease',
+                }}>
+                    <Box display="flex" alignItems="center" justifyContent="center" gap={2} mb={2}>
+                        <MultiTimeInput
+                            sections={strategy.sections} // Dynamic sections!
+                            values={inputs}              // Always an object
+                            activeSection={activeSection}
+                            bgcolor={inputBg}
+                            disabled={feedback !== 'neutral'}
+                            onSectionClick={setActiveSection}
+                        />
+                    </Box>
                 </Box>
 
-                <NumericKeyboard
-                    width={260}
-                    onKeyPress={handleVirtualKey}
-                />
+                <NumericKeyboard width={260} onKeyPress={handleVirtualKey} />
             </Box>
         </Box>
     );
