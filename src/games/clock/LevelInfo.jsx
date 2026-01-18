@@ -5,10 +5,9 @@ import { Box } from '@mui/material';
 /**
  * LevelInfo component for clock game - displays a small box with level info
  * @param {Object} props
- * @param {Object} props.config - Level config (currently empty for clock game)
- * @param {number} props.level - Current level number
+ * @param {Object} props.config - Level config with type information
  */
-function LevelInfo({ config, level }) {
+function LevelInfo({ config }) {
     return (
         <Box
             sx={{
@@ -21,8 +20,7 @@ function LevelInfo({ config, level }) {
                 bgcolor: '#f0f4f8',
             }}
         >
-            Poziom {level}: Odczytaj godzinę z zegara analogowego. 
-            Wybierz odpowiednią liczbę na klawiaturze i potwierdź.
+            Poziom {config.level}: Odczytaj czas z zegara analogowego.
         </Box>
     );
 }

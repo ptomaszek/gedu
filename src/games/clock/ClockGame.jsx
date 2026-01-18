@@ -16,7 +16,7 @@ function ClockGame({ config, nextPath }) {
 
     return (
         <Box display="flex" flexDirection="column" alignItems="center" mt={4} px={1}>
-            <LevelInfo config={config} level={1} />
+            <LevelInfo config={config} />
 
             <Box sx={{ minWidth: 250, maxWidth: '90%' }}>
                 <LevelProgressTracker
@@ -27,7 +27,7 @@ function ClockGame({ config, nextPath }) {
                 />
             </Box>
 
-            <ClockQuestion progressRef={progressRef} />
+            <ClockQuestion config={config} progressRef={progressRef} />
         </Box>
     );
 }
